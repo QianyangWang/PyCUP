@@ -1,0 +1,14 @@
+Metadata-Version: 1.2
+Name: pycup
+Version: 0.1.0
+Summary: An auto-calibration tool for environmental models based on heuristic algorithms and uncertainty estimation theory.
+Home-page: https://github.com/QianyangWang/PyCUP
+Author: Qianyang Wang
+Author-email: wqy07010944@hotmail.com
+License: MIT License
+Project-URL: Documentation, https://github.com/QianyangWang/PyCUP/DOCUMENT
+Project-URL: Source, https://github.com/QianyangWang/PyCUP/pycup
+Description: UNKNOWN
+Keywords: optimization
+Platform: UNKNOWN
+Requires-Python: >=3
