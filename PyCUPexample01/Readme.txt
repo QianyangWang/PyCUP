@@ -1,4 +1,5 @@
 This is an SWMM model calibration example using single-processing GLUE
+*****PLEASE EXECUTE THIS PROJECT UNDER THE ADMINISTRATOR'S RIGHT IN CASE OF POPUP WINDOWS*****
 1. The example SWMM model can be downloaded from https://www.epa.gov/water-research/storm-water-management-model-swmm#downloads
 2. The calibration data is a generated example data series (not real data).
 3. run the Calibrate.py for model calibration, run the PostProcessing.py for uncertainty analysis.
