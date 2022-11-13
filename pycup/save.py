@@ -298,7 +298,7 @@ class RecordSaver:
         if record_path is None:
             path = "Record.rcd"
         else:
-            path = raw_path
+            path = record_path
         with open(path, 'wb') as f:
             str = pickle.dumps(self,protocol=pickle.HIGHEST_PROTOCOL)
             f.write(str)

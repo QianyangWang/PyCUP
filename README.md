@@ -2,6 +2,10 @@
 
 ​	This is an open-source package designed for (environmental) model calibration and uncertainty analysis. The current version is the very first version, we welcome all comments, suggestions, and improvements.
 
+## v 0.1.1 Update
+
+​	The bug of defining the record_path (the user defined saving path for the RecordSaver object) was fixed. 
+
 ## How to install
 
 ​	The project has been uploaded onto the PyPI https://pypi.org/project/pycup/ . Or install the .whl file in the dist folder.
@@ -35,7 +39,7 @@ cp.SSA.run(pop = 1000, dim = 30, lb = lb, ub = ub, MaxIter = 30, fun = uni_fun1)
 ​	Folder 'PyCUPexample01' contains an SWMM calibration project using single-processing GLUE. Install the dependencies (for example: pip install swmm-api==0.2.0.18.3, pip install pyswmm). ***IMPORTANT:PLEASE OPEN YOUR PYCHARM OR COMMAND LINE WITH THE ADMINISTRATOR RIGHTS BEFORE EXECUTING THE PROJECT***. Execute the 'Calibrate.py' to calibrate the model. Then, execute the 'PostProcessing.py' for uncertainty analysis.
 ​	Folder 'PyCUPexample02' contains an SWMM calibration project using multi-processing EOGWO.
 
-![opt_curves](https://user-images.githubusercontent.com/116932670/200309723-e7730802-9dc9-4304-b86f-456b07a91b31.jpg)
-![fitness2d](https://user-images.githubusercontent.com/116932670/200312283-e30e1ff0-0679-4bc0-8c94-743486b45a05.jpg)
-![band](https://user-images.githubusercontent.com/116932670/200309801-c0035f68-0d3a-4e28-ad1c-66ded9cd8052.jpg)
+<img src="https://user-images.githubusercontent.com/116932670/200309723-e7730802-9dc9-4304-b86f-456b07a91b31.jpg" alt="opt_curves" style="zoom:28%;" />
+<img src="https://user-images.githubusercontent.com/116932670/200312283-e30e1ff0-0679-4bc0-8c94-743486b45a05.jpg" alt="fitness2d" style="zoom:15%;" />
+<img src="https://user-images.githubusercontent.com/116932670/200309801-c0035f68-0d3a-4e28-ad1c-66ded9cd8052.jpg" alt="band" style="zoom: 29%;" />
 
