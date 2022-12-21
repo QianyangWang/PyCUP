@@ -1,4 +1,4 @@
-This is an example project that calibrates an SWMM model using multi-processing EOGWO
+This is an example project that calibrates an SWMM model using multi-processing MOPSO
 *****PLEASE EXECUTE THIS PROJECT UNDER THE ADMINISTRATOR'S RIGHT IN CASE OF POPUP WINDOWS*****
 1. The example SWMM model can be downloaded from https://www.epa.gov/water-research/storm-water-management-model-swmm#downloads
 2. The calibration data is a generated example data series (not real data).
