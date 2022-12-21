@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # PyCUP
 
 <img src="https://img.shields.io/badge/Version-0.1.2-brightgreen" /><img src="https://img.shields.io/badge/Language-Python-blue" />	
@@ -98,4 +97,3 @@ cp.SSA.run(pop = 1000, dim = 30, lb = lb, ub = ub, MaxIter = 30, fun = uni_fun1)
 <img src="https://user-images.githubusercontent.com/116932670/200312283-e30e1ff0-0679-4bc0-8c94-743486b45a05.jpg" alt="fitness2d" style="zoom:15%;" />
 <img src="https://user-images.githubusercontent.com/116932670/200309801-c0035f68-0d3a-4e28-ad1c-66ded9cd8052.jpg" alt="band" style="zoom: 29%;" />
 
->>>>>>> b931dcd6faa7460293bd19fec17d5932fefa89aa
