@@ -268,7 +268,16 @@ def likelihood_uncertaintyMO(raw_saver, n_obj, thresholds, ppu, obj_weights,st_i
         # 6. calculate the 50% percentile prediction
         median_prediction = get_median_series(behaviour_results)
 
-        saver = save.ProcResultSaver(hs, hf, hr, None, None, None, behaviour_samples, behaviour_fitness,
+        # if this is a RawSaver processed by the TOPSIS.TopsisAnalyzer
+        if hasattr(raw_saver, "TOPSISidx"):
+            best_sample = raw_saver.GbestPosition
+            best_fitness = raw_saver.GbestScore
+            best_result = paretoRes[raw_saver.TOPSISidx]
+        else:
+            best_sample = None
+            best_fitness = None
+            best_result = None
+        saver = save.ProcResultSaver(hs, hf, hr, best_sample, best_fitness, best_result, behaviour_samples, behaviour_fitness,
                                     behaviour_results,
                                     w_normalized_weight, sorted_sample_val, cum_sample, results_sort, cum,
                                     ppu_line_lower, ppu_line_upper, line_min, line_max, median_prediction,paretoPops, paretoFits,

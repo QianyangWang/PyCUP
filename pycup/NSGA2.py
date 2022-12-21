@@ -61,7 +61,7 @@ def BorderCheck(X, ub, lb, pop, dim):
     return X
 
 
-def CaculateFitness(X,fun,n_obj,args):
+def CalculateFitness(X,fun,n_obj,args):
     """
     The fitness calculating function.
 
@@ -89,7 +89,7 @@ def CaculateFitness(X,fun,n_obj,args):
     return fitness,res_l
 
 
-def CaculateFitnessMP(X,fun,n_obj,n_jobs,args):
+def CalculateFitnessMP(X,fun,n_obj,n_jobs,args):
     """
     The fitness calculating function for multi-processing tasks.
 
@@ -343,7 +343,7 @@ def run(pop,dim,lb,ub,MaxIter,n_obj,fun,RecordPath = None,args=()):
 
         X,lb,ub = initial(pop, dim, ub, lb)
 
-        fitness,res = CaculateFitness(X,fun,n_obj,args)
+        fitness,res = CalculateFitness(X,fun,n_obj,args)
         hr.append(res)
         hs.append(copy.copy(X))
         hf.append(copy.copy(fitness))
@@ -376,7 +376,7 @@ def run(pop,dim,lb,ub,MaxIter,n_obj,fun,RecordPath = None,args=()):
         X, fitness,res = select1(pop, X, fitness,res, ranks, distances)
         chrpops = crossover(X, pc, etaC, lb, ub)
         chrpops = mutate(chrpops, pm, etaM, lb, ub)
-        chrfits, chrres = CaculateFitness(chrpops,fun,n_obj=n_obj,args=args)
+        chrfits, chrres = CalculateFitness(chrpops,fun,n_obj=n_obj,args=args)
         X, fitness, res = optSelect(X, fitness,res, chrpops, chrfits,chrres)
 
         hr.append(chrres)
@@ -443,7 +443,7 @@ def runMP(pop,dim,lb,ub,MaxIter,n_obj,fun,n_jobs,RecordPath = None,args=()):
 
         X,lb,ub = initial(pop, dim, ub, lb)
 
-        fitness,res = CaculateFitnessMP(X,fun,n_obj,n_jobs,args)
+        fitness,res = CalculateFitnessMP(X,fun,n_obj,n_jobs,args)
         hr.append(res)
         hs.append(copy.copy(X))
         hf.append(copy.copy(fitness))
@@ -476,7 +476,7 @@ def runMP(pop,dim,lb,ub,MaxIter,n_obj,fun,n_jobs,RecordPath = None,args=()):
         X, fitness,res = select1(pop, X, fitness,res, ranks, distances)
         chrpops = crossover(X, pc, etaC, lb, ub)
         chrpops = mutate(chrpops, pm, etaM, lb, ub)
-        chrfits, chrres = CaculateFitnessMP(chrpops,fun,n_obj=n_obj,n_jobs=n_jobs,args=args)
+        chrfits, chrres = CalculateFitnessMP(chrpops,fun,n_obj=n_obj,n_jobs=n_jobs,args=args)
         X, fitness, res = optSelect(X, fitness,res, chrpops, chrfits,chrres)
 
         hr.append(chrres)

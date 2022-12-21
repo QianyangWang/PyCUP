@@ -59,7 +59,7 @@ def BorderCheck(X, ub, lb, pop, dim):
     return X
 
 
-def CaculateFitness(X,fun,n_obj,args):
+def CalculateFitness(X,fun,n_obj,args):
     """
     The fitness calculating function.
 
@@ -87,7 +87,7 @@ def CaculateFitness(X,fun,n_obj,args):
     return fitness,res_l
 
 
-def CaculateFitnessMP(X,fun,n_obj,n_jobs,args):
+def CalculateFitnessMP(X,fun,n_obj,n_jobs,args):
     """
     The fitness calculating function for multi-processing tasks.
 
@@ -312,7 +312,7 @@ def run(pop,dim,lb,ub,MaxIter,n_obj,fun,RecordPath = None,args=()):
 
         X,lb,ub = initial(pop, dim, ub, lb)
 
-        fitness,res = CaculateFitness(X,fun,n_obj,args)
+        fitness,res = CalculateFitness(X,fun,n_obj,args)
         hr.append(res)
         hs.append(copy.copy(X))
         hf.append(copy.copy(fitness))
@@ -343,7 +343,7 @@ def run(pop,dim,lb,ub,MaxIter,n_obj,fun,RecordPath = None,args=()):
         mutantX = mutate(X, F, lb, ub)
         trialX = crossover(X, mutantX, Cr)
         trialX = BorderCheck(trialX, ub, lb, pop, dim)
-        trialFits,trialRes = CaculateFitness(trialX, fun,n_obj=n_obj,args=args)
+        trialFits,trialRes = CalculateFitness(trialX, fun,n_obj=n_obj,args=args)
         M_pops = np.concatenate((X, trialX), axis=0)
         M_fits = np.concatenate((fitness, trialFits), axis=0)
         M_ress = np.concatenate((res, trialRes), axis=0)
@@ -416,7 +416,7 @@ def runMP(pop,dim,lb,ub,MaxIter,n_obj,fun,n_jobs,RecordPath = None,args=()):
 
         X,lb,ub = initial(pop, dim, ub, lb)
 
-        fitness,res = CaculateFitnessMP(X,fun,n_obj,n_jobs,args)
+        fitness,res = CalculateFitnessMP(X,fun,n_obj,n_jobs,args)
         hr.append(res)
         hs.append(copy.copy(X))
         hf.append(copy.copy(fitness))
@@ -447,7 +447,7 @@ def runMP(pop,dim,lb,ub,MaxIter,n_obj,fun,n_jobs,RecordPath = None,args=()):
         mutantX = mutate(X, F, lb, ub)
         trialX = crossover(X, mutantX, Cr)
         trialX = BorderCheck(trialX, ub, lb, pop, dim)
-        trialFits,trialRes = CaculateFitnessMP(trialX, fun,n_obj=n_obj,n_jobs=n_jobs,args=args)
+        trialFits,trialRes = CalculateFitnessMP(trialX, fun,n_obj=n_obj,n_jobs=n_jobs,args=args)
         M_pops = np.concatenate((X, trialX), axis=0)
         M_fits = np.concatenate((fitness, trialFits), axis=0)
         M_ress = np.concatenate((res, trialRes), axis=0)

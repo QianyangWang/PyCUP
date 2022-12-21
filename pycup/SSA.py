@@ -82,7 +82,7 @@ def BorderCheck(X, ub, lb, pop, dim):
     return X
 
 
-def CaculateFitness(X, fun, args):
+def CalculateFitness(X, fun, args):
     """
     The fitness calculating function.
 
@@ -110,7 +110,7 @@ def CaculateFitness(X, fun, args):
     return fitness, res_l
 
 
-def CaculateFitnessMP(X, fun, n_jobs, args):
+def CalculateFitnessMP(X, fun, n_jobs, args):
     """
     The fitness calculating function for multi-processing tasks.
 
@@ -129,7 +129,7 @@ def CaculateFitnessMP(X, fun, n_jobs, args):
     return fitness, res_l
 
 
-def CaculateFitness_MV(Xs, fun, args):
+def CalculateFitness_MV(Xs, fun, args):
     """
     The fitness calculating function for multi-variable tasks.
 
@@ -171,7 +171,7 @@ def CaculateFitness_MV(Xs, fun, args):
     return fitness, res_l
 
 
-def CaculateFitnessMP_MV(Xs, fun, n_jobs, args):
+def CalculateFitnessMP_MV(Xs, fun, n_jobs, args):
     """
     The fitness calculating function for multi-variable & multi-processing tasks.
 
@@ -392,7 +392,7 @@ def run(pop, dim, lb, ub, MaxIter, fun, RecordPath = None, args=()):
         hr = []
 
         X, lb, ub = initial(pop, dim, ub, lb)
-        fitness, res = CaculateFitness(X, fun, args)
+        fitness, res = CalculateFitness(X, fun, args)
         hr.append(res)
         hs.append(copy.copy(X))
         hf.append(copy.copy(fitness))
@@ -437,7 +437,7 @@ def run(pop, dim, lb, ub, MaxIter, fun, RecordPath = None, args=()):
 
 
         X = BorderCheck(X, ub, lb, pop, dim)
-        fitness, res = CaculateFitness(X, fun, args)
+        fitness, res = CalculateFitness(X, fun, args)
         fitness, sortIndex = SortFitness(fitness)
         X = SortPosition(X, sortIndex)
         res = SortPosition(res, sortIndex)
@@ -452,7 +452,7 @@ def run(pop, dim, lb, ub, MaxIter, fun, RecordPath = None, args=()):
 
                 XOppo = np.array([random.random() * (Tlb + Tub) - XElite[j, :] for j in range(EliteNumber)])
                 XOppo = BorderCheck(XOppo, ub, lb, EliteNumber, dim)
-                fitOppo, resOppo = CaculateFitness(XOppo, fun, args)
+                fitOppo, resOppo = CalculateFitness(XOppo, fun, args)
                 for j in range(EliteNumber):
                     if fitOppo[j] < fitness[j]:
                         fitness[j] = copy.copy(fitOppo[j])
@@ -542,7 +542,7 @@ def runMP(pop, dim, lb, ub, MaxIter, fun, n_jobs, RecordPath = None, args=()):
         hr = []
 
         X, lb, ub = initial(pop, dim, ub, lb)
-        fitness, res = CaculateFitnessMP(X, fun, n_jobs, args)
+        fitness, res = CalculateFitnessMP(X, fun, n_jobs, args)
         hr.append(res)
         hs.append(copy.copy(X))
         hf.append(copy.copy(fitness))
@@ -587,7 +587,7 @@ def runMP(pop, dim, lb, ub, MaxIter, fun, n_jobs, RecordPath = None, args=()):
 
 
         X = BorderCheck(X, ub, lb, pop, dim)
-        fitness, res = CaculateFitnessMP(X, fun, n_jobs, args)
+        fitness, res = CalculateFitnessMP(X, fun, n_jobs, args)
         fitness, sortIndex = SortFitness(fitness)
         X = SortPosition(X, sortIndex)
         res = SortPosition(res, sortIndex)
@@ -602,7 +602,7 @@ def runMP(pop, dim, lb, ub, MaxIter, fun, n_jobs, RecordPath = None, args=()):
 
                 XOppo = np.array([random.random() * (Tlb + Tub) - XElite[j, :] for j in range(EliteNumber)])
                 XOppo = BorderCheck(XOppo, ub, lb, EliteNumber, dim)
-                fitOppo, resOppo = CaculateFitnessMP(XOppo, fun, n_jobs, args)
+                fitOppo, resOppo = CalculateFitnessMP(XOppo, fun, n_jobs, args)
                 for j in range(EliteNumber):
                     if fitOppo[j] < fitness[j]:
                         fitness[j] = copy.copy(fitOppo[j])
@@ -682,7 +682,7 @@ def run_MV(pop, dims, lbs, ubs, MaxIter, fun,RecordPath = None, args=()):
         hrs = [[] for i in range(num_var)]
 
         X, lbs, ubs = initial_MV(pop, dims, ubs, lbs)
-        fitness, res = CaculateFitness_MV(X, fun, args)
+        fitness, res = CalculateFitness_MV(X, fun, args)
         for i in range(num_var):
             hrs[i].append(res[i])
             hss[i].append(copy.copy(X[i]))
@@ -732,7 +732,7 @@ def run_MV(pop, dims, lbs, ubs, MaxIter, fun,RecordPath = None, args=()):
 
         for n in range(num_var):
             X[n] = BorderCheck(X[n], ubs[n], lbs[n], pop, dims[n])
-        fitness, res = CaculateFitness_MV(X, fun, args)
+        fitness, res = CalculateFitness_MV(X, fun, args)
         for n in range(num_var):
             fitness[n], sortIndex = SortFitness(fitness[n])
             X[n] = SortPosition(X[n], sortIndex)
@@ -750,7 +750,7 @@ def run_MV(pop, dims, lbs, ubs, MaxIter, fun,RecordPath = None, args=()):
                          for n in range(num_var)]
                 for n in range(num_var):
                     XOppo[n] = BorderCheck(XOppo[n], ubs[n], lbs[n], EliteNumber, dims[n])
-                fitOppo, resOppo = CaculateFitness_MV(XOppo, fun, args)
+                fitOppo, resOppo = CalculateFitness_MV(XOppo, fun, args)
                 for j in range(EliteNumber):
                     for n in range(num_var):
                         if fitOppo[n][j] < fitness[n][j]:
@@ -837,7 +837,7 @@ def runMP_MV(pop, dims, lbs, ubs, MaxIter, fun, n_jobs,RecordPath = None, args=(
         hrs = [[] for i in range(num_var)]
 
         X, lbs, ubs = initial_MV(pop, dims, ubs, lbs)
-        fitness, res = CaculateFitnessMP_MV(X, fun, n_jobs, args)
+        fitness, res = CalculateFitnessMP_MV(X, fun, n_jobs, args)
         for i in range(num_var):
             hrs[i].append(res[i])
             hss[i].append(copy.copy(X[i]))
@@ -887,7 +887,7 @@ def runMP_MV(pop, dims, lbs, ubs, MaxIter, fun, n_jobs,RecordPath = None, args=(
 
         for n in range(num_var):
             X[n] = BorderCheck(X[n], ubs[n], lbs[n], pop, dims[n])
-        fitness, res = CaculateFitnessMP_MV(X, fun, n_jobs, args)
+        fitness, res = CalculateFitnessMP_MV(X, fun, n_jobs, args)
         for n in range(num_var):
             fitness[n], sortIndex = SortFitness(fitness[n])
             X[n] = SortPosition(X[n], sortIndex)
@@ -905,7 +905,7 @@ def runMP_MV(pop, dims, lbs, ubs, MaxIter, fun, n_jobs,RecordPath = None, args=(
                          for n in range(num_var)]
                 for n in range(num_var):
                     XOppo[n] = BorderCheck(XOppo[n], ubs[n], lbs[n], EliteNumber, dims[n])
-                fitOppo, resOppo = CaculateFitnessMP_MV(XOppo, fun, n_jobs, args)
+                fitOppo, resOppo = CalculateFitnessMP_MV(XOppo, fun, n_jobs, args)
                 for j in range(EliteNumber):
                     for n in range(num_var):
                         if fitOppo[n][j] < fitness[n][j]:

@@ -1,6 +1,6 @@
 
 
-# PyCUP--0.1.0 documentation
+# PyCUP--0.1.2 documentation
 
 
 
@@ -136,8 +136,8 @@ def mo_fun1(X):
 
 lb = np.array([-2, -2, -2])
 ub = np.array([2, 2, 2])
-cp.MOPSO.run(pop=100, dim=3, lb=lb, ub = ub, MaxIter=20,n_obj=3,nAr=300,M=50,
-                   fun=mo_fun1)
+cp.MOPSO.run(pop=100, dim=3, lb=lb, ub = ub, MaxIter=20,
+             n_obj=3,nAr=300,M=50,fun=mo_fun1)
 ```
 
 ### Save & Load the results
@@ -253,6 +253,64 @@ opt_res = cp.save.ProcResultSaver.load(r"ProcResult.rst")
 ppu_l = opt_res.uncertain_results.ppu_line_lower
 print(ppu_l)
 ```
+
+### Determine the global optimum of the multi-objective optimization results-- the TOPSIS method
+
+​	Typically, the optimization/calibration result of a multi-objective algorithm is a set of non-dominated solutions called the Pareto front. The most desired solution, namely the global optimum, can be determined by the TOPSIS method from the obtained Pareto front. Pycup provides a module named TOPSIS.py to carry out the TOPSIS analysis for the multi-objective optimization. 
+
+​	To perform a simple TOPSIS analysis, the user can use this function:
+
+```python
+import pycup as cp
+# load your multi-objective optimization result.
+res = cp.save.RawDataSaver.load(r"raw00.rst")
+# TOPSIS analysis, the argument "weights" is optional.
+opt_fit,idx_best,score,scores = topsis(res.pareto_fitness, weights=[0.5,0.5])
+print(opt_fit)	# The determined global optimum
+print(idx_best)	# The index of it in the given Pareto front
+print(score)	# The TOPSIS score of the global optimum
+print(scores)	# The TOPSIS scores of the solutions in the Pareto front
+```
+
+​	Users can use another approach to carry out the TOPSIS analysis:
+
+```python
+import pycup
+res = pycup.save.RawDataSaver.load(r"raw00.rst")
+# initialize a TopsisAnalyzer object.
+top = TopsisAnalyzer(res,[0.8,0.2])
+print(top.OptimalFitness)
+print(top.OptimalFitness)
+# users can change the weight and re-analyze.
+top.weights = [0.5,0.5]
+top.analyze()
+print(top.OptimalFitness)
+print(top.OptimalSolution)
+print(top.OptimalResult)
+print(top.IdxBest)
+```
+
+​	It can also modify the RawDataSaver object:
+
+```python
+import pycup
+res = pycup.save.RawDataSaver.load(r"raw00.rst")
+# The original result object does not have the GBest.
+print(res.GbestPosition) # -> None
+print(res.GbestScore) # -> None
+top = TopsisAnalyzer(res)
+top.updateTopsisRawSaver(r"topsis_raw00.rst")
+topsis_res = pycup.save.RawDataSaver.load(r"topsis_raw00.rst")
+# The modified result object has the GBest.
+print(res.GbestPosition) 
+print(res.GbestScore) 
+print(res.TOPSISidx) # a new attributed has been appended (same as the idxbest)
+```
+
+​	The modified RawDataSaver object has the following advantages:
+
+1. The global optimum obtained by the TOPSIS method can be directly used in validation and prediction tasks. If the TOPSIS analysis is not performed, the Validator and Predictor objects will use all the solutions in the Pareto front for validation and prediction  (also see the Section "Validation and Prediction").
+2. The TOPSIS global optimum can be plotted by the provided Pareto front plotting funcitons  (also see the Section "Plot the 2D Pareto front" and "Plot the 3D Pareto front surface"). 
 
 ### Parameter sensitivity analysis
 
@@ -435,6 +493,31 @@ plot.plot_2d_pareto_front(saver,objfunid1=0,objfunid2=1,obj_path="pareto2d.pdf")
 
 <img src="pareto_front.png" alt="image-20220701155528751" style="zoom:10%;" />
 
+
+
+```python
+import pycup as cp
+import numpy as np
+from pycup import plot,save
+from pycup import TOPSIS,test_functions
+
+lb = np.zeros(10)
+ub = np.ones(10)
+cp.MOPSO.run(pop=100, dim=10, lb=lb, ub = ub, MaxIter=20,n_obj=2,nAr=100,M=20,
+                   fun=test_functions.ZDT4)
+
+path = "RawResult.rst"
+saver = save.RawDataSaver.load(path)
+top = TOPSIS.TopsisAnalyzer(saver)
+top.updateTopsisRawSaver("TOPSISRawResult.rst")
+new_saver = save.RawDataSaver.load("TOPSISRawResult.rst")
+plot.plot_2d_pareto_front(saver,objfunid1=0,objfunid2=1,
+                          obj_path="TOPSISpareto2d.pdf",
+                          topsis_optimum=True)
+```
+
+<img src="TOPSISpareto2d.jpg" alt="TOPSISpareto2d" style="zoom:10%;" />
+
 #### Plot the 3D Pareto front surface
 
 ```python
@@ -462,6 +545,21 @@ plot.plot_3d_pareto_front(saver,objfunid1=0,objfunid2=1,objfunid3=2,obj_path="pa
 ```
 
 <img src="pareto_front3d.png" alt="image-20220701161139612" style="zoom:10%;" />
+
+```python
+from pycup import plot,save
+from pycup import TOPSIS
+
+path = "RawResult.rst"
+saver = save.RawDataSaver.load(path)
+top = TOPSIS.TopsisAnalyzer(saver)
+top.updateTopsisRawSaver("TOPSISRawResult.rst")
+new_saver = save.RawDataSaver.load("TOPSISRawResult.rst")
+plot.plot_3d_pareto_front(saver,objfunid1=0,objfunid2=1,objfunid3=2,
+                          obj_path="TOPSISpareto3d.jpg",topsis_optimum=True)
+```
+
+<img src="TOPSISpareto3d.jpg" alt="TOPSISpareto3d" style="zoom:10%;" />
 
 #### Plot the 2D multi-objective fitness space
 
@@ -656,9 +754,9 @@ cp.plot.plot_radar_sensitivity([r1, r2, r3, r4, r5], 0, 0, linewidth=3, frameon=
 
 <img src="radar2.jpg" alt="radar" style="zoom:10%;" />
 
-#### The common parameter list of the plotting functions
+#### The common argument list of the plotting functions
 
-| Parameter name                                               | Description                                                  | Data type/Format             | Default value                                     |
+| Argument name                                                | Description                                                  | Data type/Format             | Default value                                     |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ---------------------------- | ------------------------------------------------- |
 | raw_saver/proc_saver                                         | The raw result saver/optimization result saver object generated by the saver.load() method. | object                       | N/A (required)                                    |
 | variable_id/variable_id1/variable_id2                        | The index of the parameter that you want to be plotted.      | int                          | N/A (required)                                    |
@@ -907,6 +1005,8 @@ if __name__ == "__main__":
 
 ​	The following codes contain some template functions, which are necessary for the auto-calibration program. These template codes may help you with understanding and developing your auto-calibration program.  The objective function in the template receives the parameter sample generated by our algorithms and returns the fitness value as well as the simulation results.  **It writes the parameters into their corresponding parameter files, executes the computational executable, reads the result, and calculates the fitness value**. This function may need extra function parameters such as model parameter file path, simulation file path, and executable path. Users can simply put these things into the tuple parameter "args" of the algorithm function. Then, the parameters will be sent to your objective function using the *args method. Please carefully read the following codes. 
 
+​	Users can see our examples in the GitHub repository for more information.
+
 ```python
 import os
 import pycup.evaluation_metrics
@@ -919,20 +1019,29 @@ def template_obj_fun(X, execute, fsim, fparam, fres,obs):
     """
     This is a template objective function for sigle process algorithms. 
     :param X: your sample
+    
     :param execute: your model executeable file
-    :param fsim: your simulation project file, typically, you can directly call your 		model using cmd => executable_file_path simulation_project_file_path
+    
+    :param fsim: your simulation project file, 
+    (typically, you can directly call your model using 
+    cmd => executable_file_path simulation_project_file_path)
+    
     :param fparam: your parameter file path
+    
     :param fres: your result file path
+    
     :param obs: your observation data array
+    
     :return: the fitness/liklihood function value, the result array
     
     NOTE:
     X is generated by the algorithm,
-    execute, dir_proj, fnsim,fnparam, fnres,obs,n_jobs, these parameters should be
-    provided by the "args" parameter of the algorithm function. 
+    execute, dir_proj, fnsim,fnparam, fnres,obs,n_jobs, 
+    these parameters should be provided by the "args" parameter
+    of the algorithm function. 
     
     e.g.
-    cp.SSA.SSA(..., args=(execute, dir_proj, fnsim,fnparam, fnres,obs,n_jobs))
+    cp.SSA.run(..., args=(execute, dir_proj, fnsim,fnparam, fnres,obs,n_jobs))
     """
     write_param(X,fparam)
     callexe(execute,fsim)
@@ -945,13 +1054,25 @@ def template_obj_fun_mp(X, execute, dir_proj, fnsim,fnparam, fnres,obs,n_jobs):
     """
     This is a template objective function for multi-processing algorithms. 
     :param X: the parameter array
-    :param execute: the path of your modeling software executable, it should be the 		"core" of your model, in other words, the executable for calculation. (NOT THE GUI-       USER INTERFACE EXECUTABLE)
-    :param dir_proj: the folder of your simulation project r'hydro_simulation' in this 		template
-    :param fnparam: the name/relative path (not the abs path) of your parameter file 	 	 (e.g. "para.txt")
-    :param fnres: the name/relative path (not the abs  path) of your result file (e.g. 		"result.res")
+    
+    :param execute: the path of your modeling software executable, 
+    it should be the "core" of your model, in other words, 
+    the executable for calculation. (NOT THE GUI-USER INTERFACE EXECUTABLE)
+    
+    :param dir_proj: the folder of your simulation project   
+    r'hydro_simulation' in this template
+    
+    :param fnparam: the name/relative path (not the abs path) 
+    of your parameter file (e.g. "para.txt")
+    
+    :param fnres: the name/relative path (not the abs  path) 
+    of your result file (e.g. "result.res")
+    
     :param obs: the observation data array
+    
     :param n_jobs: number of threads (processes)
-    :return:
+    
+    :return: objective function value, simulation results
     
     NOTE:
     X is generated by the algorithm,
@@ -959,16 +1080,24 @@ def template_obj_fun_mp(X, execute, dir_proj, fnsim,fnparam, fnres,obs,n_jobs):
     provided by the "args" parameter of the algorithm function. 
     
     e.g.
-    cp.SSA.SSA_MP(...,args=(execute, dir_proj, fnsim,fnparam, fnres,obs,n_jobs))
+    cp.SSA.run_MP(...,args=(execute, dir_proj, fnsim,fnparam, fnres,obs,n_jobs))
     """
     process_id = mp.current_process().name.split("-")[-1]
     """
     Allocalate the folder id for parallel simulations.
+    (see our PyCUPexample01 and PyCUPexample02 in the
+    Github repository)
     
-    Users can create several folders to simulate parallelly in case of potential 		     conflictions between different simulations. By doing this, the program can write the 	  param and read the result separately according to the process-id.
+    Users can create several folders to simulate 
+    parallelly in case of potential conflictions 
+    between different simulations. By doing this, 
+    the program can write the param and read the 
+    result separately according to the process-id.
+    
     For example:
-        If you have 4 processes (n_jobs = 4), you can copy your simulation project into 4
-        seperate folders and renamed them:
+    If you have 4 processes (n_jobs = 4), 
+    you can copy your simulation project into 4
+    seperate folders and renamed them:
         
         r'hydro_simulation\\process1\\'
         r'hydro_simulation\\process2\\'
@@ -977,7 +1106,8 @@ def template_obj_fun_mp(X, execute, dir_proj, fnsim,fnparam, fnres,obs,n_jobs):
         
     when optimizing, if the process-id is 0013,
     then, its corresponding folder id will be 13 % 4 = 1 + 1 = 2
-    the params and results will be written in r'hydro_simulation\\process2\\'
+    the params and results will be written in 
+    r'hydro_simulation\\process2\\'
     """
     folder_id = int(process_id) % n_jobs + 1
     process_folder = dir_proj + r"\\process{}\\".format(folder_id)
@@ -1193,6 +1323,19 @@ print(pred_res.line_min)				#only available for ensemble prediction
 print(pred_res.median_prediction)		#only available for ensemble prediction
 ```
 
+​	For the validation and prediction of the multi-objective calibration results, there are several different situations:
+
+1. The RawDataSaver that has not been processed by the TopsisAnalyzer.updateTopsisRawSaver(). In this situation, the all the solutions in the Parato front will be used to perform the validation/prediction task.
+
+2. The RawDataSaver that has been processed by the TopsisAnalyzer.updateTopsisRawSaver(). In this situation, the unique global optimal solution that has been recognized using the TOPSIS method will be used in the  validation/prediction task. In other words, only one model run will be carried out.
+
+3. The switch variable "UseTOPSIS" in the module "pycup.utilize" is False. Then, the solutions in the Parato front will always be used. This switch is True as default. It is designed for the cases that the user does not want to use the TOPSIS optimum.
+
+   ```python
+   from pycup import utilize
+   utilize.UseTOPSIS = False
+   ```
+
 #### Saving the archive/record and resuming
 
 ​	In case of any interruptions, the optimization information will be automatically saved in a "Record.rcd" file during the optimization process at the end of each iteration.  Users can load the "Record.rcd" file to resume their optimization process. Take GLUE calibration as an example:
@@ -1261,8 +1404,10 @@ def run_wq_couplling(proj_dir):
     lis_proc = mp.Process(target=listener)
     lis_proc.start()
     # This sentense call the MIKE11 computational executable
-    ret = cmike.callexe(r"Z:\DHI\bin\x64\mike11.exe", proj_dir + r"\tonghuihe.sim11")
-    # When the simulation process has finished, termainte and close the process of listener
+    ret = cmike.callexe(r"Z:\DHI\bin\x64\mike11.exe", proj_dir 
+                        + r"\tonghuihe.sim11")
+    # When the simulation process has finished,
+    #termainte and close the process of listener
     lis_proc.terminate()
     lis_proc.join()
     lis_proc.close()

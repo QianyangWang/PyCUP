@@ -3,6 +3,7 @@ import numpy as np
 from . import multi_jobs
 from . import uncertainty_analysis_fun as ufun
 from . import progress_bar
+UseTOPSIS = True
 
 class EnsembleValidator:
 
@@ -70,7 +71,6 @@ class EnsembleValidator:
         print("Analysis Complete!")
         return saver
     
-
 
 class EnsemblePredictor:
 
@@ -192,7 +192,7 @@ class Validator:
 
     def run(self):
         print("Current Task: Validation")
-        if self.opt_saver.GbestPosition is not None:
+        if self.opt_saver.GbestPosition is not None and UseTOPSIS:
             X = self.opt_saver.GbestPosition
         else:
             X = self.opt_saver.pareto_samples
@@ -207,7 +207,7 @@ class Validator:
 
     def runMP(self, n_jobs):
         print("Current Task: Validation MP")
-        if self.opt_saver.GbestPosition is not None:
+        if self.opt_saver.GbestPosition is not None and UseTOPSIS:
             X = self.opt_saver.GbestPosition
         else:
             X = self.opt_saver.pareto_samples
@@ -265,7 +265,7 @@ class Predictor:
 
     def run(self):
         print("Current Task: Prediction")
-        if self.opt_saver.GbestPosition is not None:
+        if self.opt_saver.GbestPosition is not None and UseTOPSIS:
             X = self.opt_saver.GbestPosition
         else:
             X = self.opt_saver.pareto_samples
@@ -279,7 +279,7 @@ class Predictor:
 
     def runMP(self, n_jobs):
         print("Current Task: Prediction MP")
-        if self.opt_saver.GbestPosition is not None:
+        if self.opt_saver.GbestPosition is not None and UseTOPSIS:
             X = self.opt_saver.GbestPosition
         else:
             X = self.opt_saver.pareto_samples

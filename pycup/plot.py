@@ -1563,6 +1563,7 @@ def plot_2d_pareto_front(
                     obj_path="pareto2d.pdf",
                     figsize=(8, 8),
                     dpi=400,
+                    markersize = 30,
                     framewidth=1.2,
                     title=" ",
                     lbl_fontsize=16,
@@ -1578,6 +1579,9 @@ def plot_2d_pareto_front(
                     legendloc=0,
                     legendlabel="Pareto non-dominated solutions",
                     legend_fontsize=14,
+                    topsis_optimum=False,
+                    best_color="b",
+                    best_markersize=80,
                     slim=True,
                     tight=True,
                     show=True):
@@ -1607,6 +1611,7 @@ def plot_2d_pareto_front(
     legendloc: the location of the legend -> int (0-8), default = 0
     legendlabels: label in the legend -> str, default = "Pareto non-dominated solutions"
     legend_fontsize: fontsize of legend labels -> int or float, default = 14
+    topsis_optimum: This can only be True when the raw saver has been processed by pycup.TOPSIS.TopsisAnalyzer. -> bool
     slim: the plotting range option -> bool, default = True, if True, the plotting range will be confined to the
           value ranges of the given data.
     tight: option for the white frame outside the plotting area -> bool, default = True, tight output (slim white frame)
@@ -1645,7 +1650,14 @@ def plot_2d_pareto_front(
     fig = plt.figure(figsize=figsize,dpi=dpi)
 
     ax = fig.add_subplot(111)
-    ax.scatter(x, y, color=color, label=legendlabel)
+    ax.scatter(x, y, color=color, label=legendlabel,s=markersize)
+    if topsis_optimum:
+        if topsis_optimum:
+            if hasattr(raw_saver, "TOPSISidx"):
+                topsis_fitness = raw_saver.GbestScore
+                ax.scatter(topsis_fitness[objfunid1],topsis_fitness[objfunid2],color=best_color,s=best_markersize,label="TOPSIS optimum")
+            else:
+                raise AttributeError("The TOPSIS optimum can only be plotted using a pycup.TOPSIS.TopsisAnalyzer processed RawDataSaver.")
     ax = plt.gca()
     ax.spines['bottom'].set_linewidth(framewidth)
     ax.spines['top'].set_linewidth(framewidth)
@@ -1675,6 +1687,7 @@ def plot_2d_pareto_front(
         plt.show()
 
 
+
 def plot_3d_pareto_front(raw_saver,
                       objfunid1,
                       objfunid2,
@@ -1696,6 +1709,9 @@ def plot_3d_pareto_front(raw_saver,
                       x_lim=(),
                       y_lim=(),
                       z_lim=(),
+                      topsis_optimum=False,
+                      best_color="b",
+                      best_markersize=120,
                       slim=True,
                       tight = True,
                       show=True):
@@ -1725,6 +1741,7 @@ def plot_3d_pareto_front(raw_saver,
     x_lim: x axis plotting range -> tuple
     y_lim: y axis plotting range -> tuple
     z_lim: z axis plotting range -> tuple
+    topsis_optimum: This can only be True when the raw saver has been processed by pycup.TOPSIS.TopsisAnalyzer. -> bool
     slim: the plotting range option -> bool, default = True, if True, the plotting range will be confined to the
           value ranges of the given data.
     tight: option for the white frame outside the plotting area -> bool, default = True, tight output (slim white frame)
@@ -1761,6 +1778,12 @@ def plot_3d_pareto_front(raw_saver,
     ax = fig.add_subplot(111, projection='3d')
     s = ax.scatter(xs=x, ys=y, zs=z, c=color,
                    marker=marker, s=markersize)
+    if topsis_optimum:
+        if hasattr(raw_saver, "TOPSISidx"):
+            topsis_fitness = raw_saver.GbestScore
+            ax.scatter(xs=topsis_fitness[objfunid1],ys=topsis_fitness[objfunid2],zs=topsis_fitness[objfunid3],color=best_color,s=best_markersize,label="TOPSIS optimum")
+        else:
+            raise AttributeError("The TOPSIS optimum can only be plotted using a pycup.TOPSIS.TopsisAnalyzer processed RawDataSaver.")
     ax.view_init(*view_init)
     if slim:
         ax.set_xlim(np.min(x), np.max(x))
@@ -1790,6 +1813,7 @@ def plot_3d_pareto_front(raw_saver,
         plt.savefig(obj_path)
     if show:
         plt.show()
+
 
 
 def plot_2d_MO_fitness_space(raw_saver,

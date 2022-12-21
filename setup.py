@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='pycup',
-  version='0.1.1',
+  version='0.1.2',
   description='An auto-calibration tool for environmental models based on heuristic algorithms and uncertainty estimation theory.',
   author='Qianyang Wang',
   author_email='wqy07010944@hotmail.com',

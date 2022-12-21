@@ -65,7 +65,7 @@ def BorderCheck(X, ub, lb, pop, dim):
     return X
 
 
-def CaculateFitness(X,fun,n_obj,args):
+def CalculateFitness(X,fun,n_obj,args):
     """
     The fitness calculating function.
 
@@ -93,7 +93,7 @@ def CaculateFitness(X,fun,n_obj,args):
     return fitness,res_l
 
 
-def CaculateFitnessMP(X,fun,n_obj,n_jobs,args):
+def CalculateFitnessMP(X,fun,n_obj,n_jobs,args):
     """
     The fitness calculating function for multi-processing tasks.
 
@@ -395,7 +395,7 @@ def run(pop,dim,lb,ub,MaxIter,n_obj,nAr,M,fun,Vmin=None,Vmax=None,RecordPath = N
 
         X,lb,ub = initial(pop, dim, ub, lb)
         V,Vmin,Vmax = initial(pop, dim, Vmax, Vmin)
-        fitness,res = CaculateFitness(X,fun,n_obj,args)
+        fitness,res = CalculateFitness(X,fun,n_obj,args)
         hr.append(res)
         hs.append(copy.copy(X))
         hf.append(copy.copy(fitness))
@@ -455,7 +455,7 @@ def run(pop,dim,lb,ub,MaxIter,n_obj,nAr,M,fun,Vmin=None,Vmax=None,RecordPath = N
             X[j, :] = X[j, :] + V[j, :]
 
         X = BorderCheck(X, ub, lb, pop, dim)
-        fitness, res = CaculateFitness(X, fun,n_obj, args)
+        fitness, res = CalculateFitness(X, fun,n_obj, args)
         Pbest, fitnessPbest = updatePBest(Pbest, fitnessPbest, X, fitness)
         archive, arFits,arRes = updateArchive(X, fitness,res, archive, arFits,arRes)
         archive, arFits,arRes = checkArchive(archive, arFits,arRes, nAr, M)
@@ -471,7 +471,7 @@ def run(pop,dim,lb,ub,MaxIter,n_obj,nAr,M,fun,Vmin=None,Vmax=None,RecordPath = N
                 Tub = np.max(XElite, 0)
                 XOppo = np.array([random.random() * (Tlb + Tub) - XElite[j, :] for j in range(EliteNumber)])
                 XOppo = BorderCheck(XOppo, ub, lb, EliteNumber, dim)
-                fitOppo, resOppo = CaculateFitness(XOppo, fun,n_obj, args)
+                fitOppo, resOppo = CalculateFitness(XOppo, fun,n_obj, args)
                 for i in range(len(EliteIdx)):
                     notsameflag = np.sum(np.sum(XOppo[i] == archive, axis=1) == XOppo.shape[1])
                     isDom = fitOppo[i] < arFits[EliteIdx[i]]
@@ -549,7 +549,7 @@ def runMP(pop, dim, lb, ub, MaxIter,  n_obj, nAr, M,fun,n_jobs, Vmin=None, Vmax=
 
         X, lb, ub = initial(pop, dim, ub, lb)
         V, Vmin, Vmax = initial(pop, dim, Vmax, Vmin)
-        fitness, res = CaculateFitnessMP(X, fun, n_obj,n_jobs, args)
+        fitness, res = CalculateFitnessMP(X, fun, n_obj,n_jobs, args)
         hr.append(res)
         hs.append(copy.copy(X))
         hf.append(copy.copy(fitness))
@@ -608,7 +608,7 @@ def runMP(pop, dim, lb, ub, MaxIter,  n_obj, nAr, M,fun,n_jobs, Vmin=None, Vmax=
             X[j, :] = X[j, :] + V[j, :]
 
         X = BorderCheck(X, ub, lb, pop, dim)
-        fitness, res = CaculateFitnessMP(X, fun, n_obj,n_jobs, args)
+        fitness, res = CalculateFitnessMP(X, fun, n_obj,n_jobs, args)
         Pbest, fitnessPbest = updatePBest(Pbest, fitnessPbest, X, fitness)
         archive, arFits, arRes = updateArchive(X, fitness, res, archive, arFits, arRes)
         archive, arFits,arRes = checkArchive(archive, arFits,arRes, nAr, M)
@@ -624,7 +624,7 @@ def runMP(pop, dim, lb, ub, MaxIter,  n_obj, nAr, M,fun,n_jobs, Vmin=None, Vmax=
                 Tub = np.max(XElite, 0)
                 XOppo = np.array([random.random() * (Tlb + Tub) - XElite[j, :] for j in range(EliteNumber)])
                 XOppo = BorderCheck(XOppo, ub, lb, EliteNumber, dim)
-                fitOppo, resOppo = CaculateFitness(XOppo, fun,n_obj, args)
+                fitOppo, resOppo = CalculateFitnessMP(XOppo, fun,n_obj,n_jobs, args)
                 for i in range(len(EliteIdx)):
                     notsameflag = np.sum(np.sum(XOppo[i] == archive, axis=1) == XOppo.shape[1])
                     isDom1 = fitOppo[i] < arFits[EliteIdx[i]]
