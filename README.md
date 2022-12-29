@@ -47,7 +47,9 @@ cp.SSA.run(pop = 1000, dim = 30, lb = lb, ub = ub, MaxIter = 30, fun = uni_fun1)
 
 ​	Folder 'PyCUPexample03' contains an SWMM multi-objective calibration project using EOMOPSO. 
 
-<div align=center>![rm_figure](https://user-images.githubusercontent.com/116932670/209893309-e67c425f-0eff-47b4-a552-b30d717a138b.png)</div>
+<div align=center>
+![rm_figure](https://user-images.githubusercontent.com/116932670/209893309-e67c425f-0eff-47b4-a552-b30d717a138b.png)
+</div>
 
 
 
