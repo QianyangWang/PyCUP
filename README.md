@@ -42,10 +42,10 @@ cp.SSA.run(pop = 1000, dim = 30, lb = lb, ub = ub, MaxIter = 30, fun = uni_fun1)
 
 ## Example SWMM (Storm Water Management Model) calibration projects
 
-​	Folder 'PyCUPexample01' contains an SWMM calibration project using single-processing GLUE. Install the dependencies (for example: pip install swmm-api==0.2.0.18.3, pip install pyswmm). ***IMPORTANT:PLEASE OPEN YOUR PYCHARM OR COMMAND LINE WITH THE ADMINISTRATOR RIGHTS BEFORE EXECUTING THE PROJECT***. Execute the 'Calibrate.py' to calibrate the model. Then, execute the 'PostProcessing.py' for uncertainty analysis.
-​	Folder 'PyCUPexample02' contains an SWMM calibration project using multi-processing EOGWO.
-
-​	Folder 'PyCUPexample03' contains an SWMM multi-objective calibration project using EOMOPSO. 
+***IMPORTANT:PLEASE OPEN YOUR PYCHARM OR COMMAND LINE WITH THE ADMINISTRATOR RIGHTS BEFORE EXECUTING THE EXAMPLE PROJECT***
+1. Folder 'PyCUPexample01' contains an SWMM calibration project using single-processing GLUE. Install the dependencies (for example: pip install swmm-api==0.2.0.18.3, pip install pyswmm). Execute the 'Calibrate.py' to calibrate the model. Then, execute the 'PostProcessing.py' for uncertainty analysis.
+2. Folder 'PyCUPexample02' contains an SWMM calibration project using multi-processing EOGWO.
+3. Folder 'PyCUPexample03' contains an SWMM multi-objective calibration project using EOMOPSO. 
 
 <div align=center>
 <img src="https://user-images.githubusercontent.com/116932670/209893309-e67c425f-0eff-47b4-a552-b30d717a138b.png">
