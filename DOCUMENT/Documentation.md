@@ -1,6 +1,6 @@
 
 
-# PyCUP--0.1.2 documentation
+# PyCUP--0.1.2.1 documentation
 
 
 
@@ -627,7 +627,7 @@ opt_res = save.ProcResultSaver.load(r"ProcResult.rst")
 plot.plot_posterior_distribution(opt_res,variable_id=1,obj_path="dis.jpg")
 ```
 
-<img src="post_dis2.png" alt="image-20220617153413735" style="zoom: 10%;" />
+<img src="dis.jpg" alt="dis" style="zoom:10%;" />
 
 ​	You can reverse your main plot and the subplot by setting the "reverse" parameter equal to True.
 
@@ -651,12 +651,13 @@ res1 = save.ProcResultSaver.load(r"ProcResult1.rst")
 res2 = save.ProcResultSaver.load(r"ProcResult2.rst")
 res3 = save.ProcResultSaver.load(r"ProcResult3.rst")
 r_list = [res1, res2,res3]
-plot.plot_3d_posterior_distributions(r_list,variable_id=0,obj_path="dis3d.jpg",y_ticklabels=["SSA","GLUE","GWO"])
+plot.plot_3d_posterior_distributions(r_list,variable_id=0,obj_path="dis3d.jpg",
+                                     y_ticklabels=["SSA","GLUE","GWO"],  	 									  view_init=(30,-135))
 ```
 
 <img src="dis3d.jpg" alt="dis3d" style="zoom:10%;" />
 
-#### Plot the 3D bar plots of normalized weights
+#### Plot the 3D histograms of normalized weights
 
 ​	This function is for users to make a comparison between the normalized weights obtained from different algorithms.
 
@@ -667,10 +668,12 @@ res1 = save.ProcResultSaver.load(r"ProcResult1.rst")
 res2 = save.ProcResultSaver.load(r"ProcResult2.rst")
 res3 = save.ProcResultSaver.load(r"ProcResult3.rst")
 r_list = [res1, res2,res3]
-plot.plot_3d_posterior_bars(r_list,variable_id=0,obj_path="dis3d.jpg",y_ticklabels=["SSA","GLUE","GWO"])
+plot.plot_3d_posterior_hist(r_list,variable_id=0,obj_path="dis3d.jpg",
+                            y_ticklabels=["SSA","MFO","PSO"],bins=10,
+                            bar_width=0.6,view_init=(20,30))
 ```
 
-<img src="postbar3d.jpg" alt="postbar3d" style="zoom:10%;" />
+<img src="posthist3d.jpg" alt="posthist3d" style="zoom:10%;" />
 
 #### Plot the uncertainty band
 
@@ -1552,7 +1555,7 @@ def obj_fun(X,train_x,train_y,test_x,test_y,ss_y):
     rbf_svr_predict = rbf_svr.predict(test_x)
     r_test_y = ss_y.inverse_transform(test_y)
     r_pred_y =  ss_y.inverse_transform(rbf_svr_predict)
-    # use 2-r2 as the likihood function 
+    # use 2-r2 as the likihood function
     # (in case of r2~1.0 then num/0 during uncertainty analysis)
     fitness = 2 - r2_score(r_test_y,r_pred_y)
     result = r_pred_y.reshape(1,-1)
@@ -1599,8 +1602,8 @@ if __name__ == "__main__":
     plot.plot_2d_sample_space(raw_res, variable_id1=0, variable_id2=1,x_label="C",y_label="Gamma", obj_path="sample2dSVR.jpg")
     plot.plot_3d_fitness_space(raw_res, variable_id1=0, variable_id2=1,x_label="C",y_label="Gamma", obj_path="sample3dSVR.jpg")
     opt_res = save.ProcResultSaver.load(r"proc_svr.rst")
-    plot.plot_posterior_distribution(opt_res, variable_id=0,x_label="C", obj_path="disC.jpg", reverse=False, barwidth=0.05, subloc=8)
-    plot.plot_posterior_distribution(opt_res, variable_id=1,x_label="Gamma", obj_path="disGamma.jpg", reverse=False, barwidth=0.05, subloc=8)
+    plot.plot_posterior_distribution(opt_res, variable_id=0,x_label="C", obj_path="disC.jpg", reverse=False, subloc=8)
+    plot.plot_posterior_distribution(opt_res, variable_id=1,x_label="Gamma", obj_path="disGamma.jpg", reverse=False, subloc=8)
     plot.plot_opt_curves(raw_res, slim=False, frameon=False, legendlabels=["PSO"], obj_path="curveSVR.jpg")
 ```
 

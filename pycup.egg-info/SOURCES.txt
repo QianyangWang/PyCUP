@@ -10,6 +10,7 @@ pycup/PSO.py
 pycup/SCA.py
 pycup/SOA.py
 pycup/SSA.py
+pycup/TOPSIS.py
 pycup/TSA.py
 pycup/WOA.py
 pycup/__init__.py
