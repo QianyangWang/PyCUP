@@ -5,26 +5,9 @@ from . import sampling
 from . import save
 from . import multi_jobs
 from . import progress_bar
+from . import Reslib
 import copy
-
-
-def SortFitness(Fit):
-    fitness = np.sort(Fit,axis=0)
-    index = np.argsort(Fit,axis=0)
-    return fitness,index
-
-
-def SortPosition(X,index):
-    Xnew = np.zeros(X.shape)
-    for i in range(X.shape[0]):
-        Xnew[i,:] = X[index[i],:]
-    return Xnew
-
-def check_listitem(item1, item2):
-    s_flags = [item1[i] == item2[i] for i in range(len(item1))]
-    length = [len(item1[i]) for i in range(len(item1))]
-    same = np.sum(s_flags) == np.sum(length)
-    return same
+from .calc_utils import SortFitness,SortPosition,check_listitem
 
 
 def record_check(n, dim, lb, ub, a_n, a_dim, a_lb, a_ub):
@@ -126,14 +109,21 @@ def run(n,dim,lb,ub,fun,RecordPath = None,args=()):
         Progress_Bar.update(len(hf))
         record = save.GLUERecord(n=n, dim=dim, lb=lb, ub=ub, hf=hf, hs=hs, hr=hr,iteration=i+1,mode="GLUE")
         record.save()
-
-    hr = [i.reshape(1, -1) for i in hr]
-    hr = np.concatenate(hr, axis=0)
+    if not Reslib.UseResObject:
+        hr = [i.reshape(1, -1) for i in hr]
+        hr = np.concatenate(hr, axis=0)
+    else:
+        hr = np.array(hr,dtype=object)
     hf = np.array(hf).reshape(-1,1)
 
     hf, f_index = SortFitness(hf)
     hs = SortPosition(hs,f_index)
-    hr = SortPosition(hr,f_index)
+    if not Reslib.UseResObject:
+        hr = SortPosition(hr,f_index)
+    else:
+        hr = hr[f_index]
+        hr=hr.flatten()
+        hr = Reslib.ResultDataPackage(l_result=hr,method_info="GLUE")
 
     GbestPositon = np.zeros([1, dim])
     GbestScore = copy.copy(hf[0])
@@ -228,7 +218,13 @@ def runMP(n,dim,lb,ub,fun,n_jobs,RecordPath = None,args=()):
     hr = np.concatenate(hr,axis=0)
     hf, f_index = SortFitness(hf)
     hs = SortPosition(hs,f_index)
-    hr = SortPosition(hr,f_index)
+
+    if not Reslib.UseResObject:
+        hr = SortPosition(hr,f_index)
+    else:
+        hr = hr[f_index]
+        hr = hr.flatten()
+        hr = Reslib.ResultDataPackage(l_result=hr,method_info="GLUE")
 
     GbestPositon = np.zeros([1, dim])
     GbestScore = copy.copy(hf[0])
@@ -304,7 +300,8 @@ def run_MV(n,dims,lbs,ubs,fun,RecordPath = None,args=()):
         fitness,res = fun(sample,*args)
         # fitness  [[],[]]
         # res [[,,,],[,,,]]
-        res = [i.reshape(1, -1) for i in res]
+        if not Reslib.UseResObject:
+            res = [i.reshape(1, -1) for i in res]
         fitness = [np.array(i).reshape(-1, 1) for i in fitness]
         temp_f.append(fitness)
         temp_r.append(res)
@@ -317,15 +314,22 @@ def run_MV(n,dims,lbs,ubs,fun,RecordPath = None,args=()):
         hf = [temp_f[i][d] for i in range(n)] # -> [ [],[],[], ... ]
         hf = np.concatenate(hf,axis=0)
         hr = [temp_r[i][d] for i in range(n)] # -> [ [,,,], [,,,], ... ]
-        hr = np.concatenate(hr,axis=0)
+        if not Reslib.UseResObject:
+            hr = np.concatenate(hr,axis=0)
+        else:
+            hr = np.array(hr,dtype=object)
         hfs.append(hf)
         hrs.append(hr)
 
     for i in range(len(hss)):
         hfs[i], f_index = SortFitness(hfs[i])
         hss[i] = SortPosition(hss[i],f_index)
-        hrs[i] = SortPosition(hrs[i],f_index)
-
+        if not Reslib.UseResObject:
+            hrs[i] = SortPosition(hrs[i],f_index)
+        else:
+            hrs[i]=hrs[i][f_index]
+            hrs[i] = hrs[i].flatten()
+            hrs[i] = Reslib.ResultDataPackage(l_result=hrs[i],method_info="GLUE")
     # 2. save
     for i in range(len(hss)):
 
@@ -425,7 +429,12 @@ def runMP_MV(n,dims,lbs,ubs,fun,n_jobs,RecordPath = None,args=()):
     for i in range(len(hss)):
         hfs[i], f_index = SortFitness(hfs[i])
         hss[i] = SortPosition(hss[i],f_index)
-        hrs[i] = SortPosition(hrs[i],f_index)
+        if not Reslib.UseResObject:
+            hrs[i] = SortPosition(hrs[i],f_index)
+        else:
+            hrs[i]=hrs[i][f_index]
+            hrs[i] = hrs[i].flatten()
+            hrs[i] = Reslib.ResultDataPackage(l_result=hrs[i],method_info="GLUE")
 
     # 2. save
     for i in range(len(hss)):

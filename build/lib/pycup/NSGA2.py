@@ -6,6 +6,8 @@ from . import save
 from . import multi_jobs
 import math
 from . import progress_bar
+from . import Reslib
+from .calc_utils import CalculateFitness,CalculateFitnessMP,BorderCheck
 
 Sampling = "LHS"
 pc = 0.6
@@ -34,78 +36,6 @@ def initial(pop, dim, ub, lb):
         raise KeyError("The selectable sampling strategies are: 'LHS','Random','Chebyshev','Circle','Logistic','Piecewise','Sine','Singer','Sinusoidal','Tent'.")
 
     return X, lb, ub
-
-
-
-def BorderCheck(X, ub, lb, pop, dim):
-    """
-    Border check function. If a solution is out of the given boundaries, it will be mandatorily
-    moved to the boundary.
-
-    :argument
-    X: samples -> np.array, shape = (pop, dim)
-    ub: upper boundaries list -> [np.array, ..., np.array]
-    lb: lower boundary list -> [np.array, ..., np.array]
-    pop: population size -> int
-    dims: num. parameters list -> [int, ..., int]
-
-    :return
-    X: the updated samples
-    """
-    for i in range(pop):
-        for j in range(dim):
-            if X[i, j] > ub[j]:
-                X[i, j] = ub[j]
-            elif X[i, j] < lb[j]:
-                X[i, j] = lb[j]
-    return X
-
-
-def CalculateFitness(X,fun,n_obj,args):
-    """
-    The fitness calculating function.
-
-    :argument
-    X: samples -> np.array, shape = (pop, dim)
-    fun: The user defined objective function or function in pycup.test_functions. The function
-         should return a fitness value and a calculation result. See pycup.test_functions for
-         more information -> function variable
-    args: A tuple of arguments. Users can use it for obj_fun's customization. For example, the
-          parameter file path and model file path can be stored in this tuple for further use.
-          See the document for more details.
-
-    :returns
-    fitness: The calculated fitness value.
-    res_l: The simulation/calculation results after concatenate. -> np.array, shape = (pop, len(result))
-           For a continuous simulation, the len(result) is equivalent to len(time series)
-    """
-    pop = X.shape[0]
-    fitness = np.zeros([pop, n_obj])
-    res_l = []
-    for i in range(pop):
-        fitness[i],res = fun(X[i, :],*args)
-        res_l.append(res)
-    res_l = np.concatenate(res_l)
-    return fitness,res_l
-
-
-def CalculateFitnessMP(X,fun,n_obj,n_jobs,args):
-    """
-    The fitness calculating function for multi-processing tasks.
-
-    :argument
-    X: samples -> np.array, shape = (pop, dim)
-    fun: The user defined objective function or function in pycup.test_functions. The function
-         should return a fitness value and a calculation result. See pycup.test_functions for
-         more information -> function variable
-    n_jobs: number of threads/processes -> int
-    args: A tuple of arguments. Users can use it for obj_fun's customization. For example, the
-          parameter file path and model file path can be stored in this tuple for further use.
-          See the document for more details.
-    """
-    fitness, res_l = multi_jobs.do_multi_jobsMO(func=fun, params=X,  n_process=n_jobs,n_obj=n_obj,args=args)
-
-    return fitness,res_l
 
 
 def mutate(X, pm, etaM, lb, ub):
@@ -197,11 +127,14 @@ def crowdingDistanceSort(X, fitness, ranks):
 def select1(pool, X, fitness,ress, ranks, distances):
 
     pop, dim = X.shape
-    l_res = ress.shape[1]
     nF = fitness.shape[1]
     newX = np.zeros((pool, dim))
     newFits = np.zeros((pool, nF))
-    newRess = np.zeros((pool,l_res))
+    if not Reslib.UseResObject:
+        l_res = ress.shape[1]
+        newRess = np.zeros((pool,l_res))
+    else:
+        newRess = np.zeros(pool,dtype=object)
 
     indices = np.arange(pop).tolist()
     i = 0
@@ -259,10 +192,14 @@ def optSelect(X, fitness,res, chrPops, chrFits,chrRes):
 
     pop, dim = X.shape
     nF = fitness.shape[1]
-    lenRes = res.shape[1]
+
     newX = np.zeros((pop, dim))
     newFits = np.zeros((pop, nF))
-    newRes = np.zeros((pop, lenRes))
+    if not Reslib.UseResObject:
+        lenRes = res.shape[1]
+        newRes = np.zeros((pop, lenRes))
+    else:
+        newRes = np.zeros(pop,dtype=object)
 
     MergePops = np.concatenate((X, chrPops), axis=0)
     MergeFits = np.concatenate((fitness, chrFits), axis=0)
@@ -393,6 +330,10 @@ def run(pop,dim,lb,ub,MaxIter,n_obj,fun,RecordPath = None,args=()):
     paretoRes = res[ranks == 0]
     print("")  # for progress bar
 
+    if Reslib.UseResObject:
+        hr = Reslib.ResultDataPackage(l_result=hr,method_info="Algorithm")
+        paretoRes = Reslib.ResultDataPackage(l_result=paretoRes,method_info="Pareto front")
+
     raw_saver = save.RawDataSaver(hs, hf, hr, paretoFits=paretoFits, paretoPops=paretoPops,paretoRes=paretoRes,OptType="MO-SWARM")
     raw_saver.save(save.raw_path)
 
@@ -492,6 +433,10 @@ def runMP(pop,dim,lb,ub,MaxIter,n_obj,fun,n_jobs,RecordPath = None,args=()):
     paretoFits = fitness[ranks == 0]
     paretoRes = res[ranks == 0]
     print("")  # for progress bar
+
+    if Reslib.UseResObject:
+        hr = Reslib.ResultDataPackage(l_result=hr,method_info="Algorithm")
+        paretoRes = Reslib.ResultDataPackage(l_result=paretoRes, method_info="Pareto front")
 
     raw_saver = save.RawDataSaver(hs, hf, hr, paretoFits=paretoFits, paretoPops=paretoPops,paretoRes=paretoRes,OptType="MO-SWARM")
     raw_saver.save(save.raw_path)

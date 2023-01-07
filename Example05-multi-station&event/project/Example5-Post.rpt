@@ -1,0 +1,212 @@
+
+  EPA STORM WATER MANAGEMENT MODEL - VERSION 5.1 (Build 5.1.014)
+  --------------------------------------------------------------
+
+  Example 2 
+  Surface Drainage System 
+  
+  
+  *********************************************************
+  NOTE: The summary statistics displayed in this report are
+  based on results found at every computational time step,  
+  not just on results from each reporting time step.
+  *********************************************************
+  
+  ****************
+  Analysis Options
+  ****************
+  Flow Units ............... CFS
+  Process Models:
+    Rainfall/Runoff ........ YES
+    RDII ................... NO
+    Snowmelt ............... NO
+    Groundwater ............ NO
+    Flow Routing ........... YES
+    Ponding Allowed ........ NO
+    Water Quality .......... NO
+  Infiltration Method ...... HORTON
+  Flow Routing Method ...... KINWAVE
+  Starting Date ............ 01/01/2007 00:00:00
+  Ending Date .............. 01/03/2007 12:00:00
+  Antecedent Dry Days ...... 0.0
+  Report Time Step ......... 00:10:00
+  Wet Time Step ............ 00:05:00
+  Dry Time Step ............ 01:00:00
+  Routing Time Step ........ 60.00 sec
+  
+  
+  **************************        Volume         Depth
+  Runoff Quantity Continuity     acre-feet        inches
+  **************************     ---------       -------
+  Total Precipitation ......        12.966         5.380
+  Evaporation Loss .........         0.000         0.000
+  Infiltration Loss ........         5.560         2.307
+  Surface Runoff ...........         7.302         3.030
+  Final Storage ............         0.139         0.058
+  Continuity Error (%) .....        -0.271
+  
+  
+  **************************        Volume        Volume
+  Flow Routing Continuity        acre-feet      10^6 gal
+  **************************     ---------     ---------
+  Dry Weather Inflow .......         0.000         0.000
+  Wet Weather Inflow .......         7.302         2.379
+  Groundwater Inflow .......         0.000         0.000
+  RDII Inflow ..............         0.000         0.000
+  External Inflow ..........         0.000         0.000
+  External Outflow .........         5.126         1.670
+  Flooding Loss ............         2.168         0.706
+  Evaporation Loss .........         0.000         0.000
+  Exfiltration Loss ........         0.000         0.000
+  Initial Stored Volume ....         0.000         0.000
+  Final Stored Volume ......         0.000         0.000
+  Continuity Error (%) .....         0.117
+  
+  
+  ********************************
+  Highest Flow Instability Indexes
+  ********************************
+  All links are stable.
+  
+  
+  *************************
+  Routing Time Step Summary
+  *************************
+  Minimum Time Step           :    60.00 sec
+  Average Time Step           :    60.00 sec
+  Maximum Time Step           :    60.00 sec
+  Percent in Steady State     :     0.00
+  Average Iterations per Step :     1.07
+  Percent Not Converging      :     0.00
+  
+  
+  ***************************
+  Subcatchment Runoff Summary
+  ***************************
+  
+  ------------------------------------------------------------------------------------------------------------------------------
+                            Total      Total      Total      Total     Imperv       Perv      Total       Total     Peak  Runoff
+                           Precip      Runon       Evap      Infil     Runoff     Runoff     Runoff      Runoff   Runoff   Coeff
+  Subcatchment                 in         in         in         in         in         in         in    10^6 gal      CFS
+  ------------------------------------------------------------------------------------------------------------------------------
+  S1                         5.38       0.00       0.00       2.32       3.01       0.00       3.01        0.37    17.41   0.560
+  S2                         5.38       0.00       0.00       1.99       3.34       0.00       3.34        0.43    19.12   0.621
+  S3                         5.38       0.00       0.00       3.25       2.10       0.00       2.10        0.21    12.26   0.390
+  S4                         5.38       0.00       0.00       2.70       2.65       0.00       2.65        0.49    24.12   0.492
+  S5                         5.38       0.00       0.00       0.66       4.65       0.00       4.65        0.60    22.96   0.864
+  S6                         5.38       0.00       0.00       0.27       5.04       0.00       5.04        0.27    12.18   0.937
+  S7                         5.38       0.00       0.00       5.38       0.00       0.00       0.00        0.00     0.00   0.000
+  
+  
+  ******************
+  Node Depth Summary
+  ******************
+  
+  ---------------------------------------------------------------------------------
+                                 Average  Maximum  Maximum  Time of Max    Reported
+                                   Depth    Depth      HGL   Occurrence   Max Depth
+  Node                 Type         Feet     Feet     Feet  days hr:min        Feet
+  ---------------------------------------------------------------------------------
+  J1                   JUNCTION     0.01     0.33  4973.33     0  00:36        0.30
+  J2                   JUNCTION     0.04     0.61  4969.61     0  00:36        0.58
+  J3                   JUNCTION     0.03     0.73  4973.73     0  00:36        0.61
+  J4                   JUNCTION     0.02     0.72  4971.72     0  00:36        0.61
+  J5                   JUNCTION     0.02     0.64  4970.44     0  00:37        0.58
+  J6                   JUNCTION     0.04     1.19  4970.19     0  00:37        1.09
+  J7                   JUNCTION     0.01     0.39  4971.89     0  00:36        0.35
+  J8                   JUNCTION     0.22     3.50  4970.00     0  00:18        3.50
+  J10                  JUNCTION     0.02     0.52  4964.32     0  00:36        0.50
+  J11                  JUNCTION     4.04     4.60  4967.60     0  00:38        4.59
+  O1                   OUTFALL      0.06     1.31  4963.31     0  00:37        1.27
+  O2                   OUTFALL      0.09     1.00  4965.80     0  00:20        1.00
+  
+  
+  *******************
+  Node Inflow Summary
+  *******************
+  
+  -------------------------------------------------------------------------------------------------
+                                  Maximum  Maximum                  Lateral       Total        Flow
+                                  Lateral    Total  Time of Max      Inflow      Inflow     Balance
+                                   Inflow   Inflow   Occurrence      Volume      Volume       Error
+  Node                 Type           CFS      CFS  days hr:min    10^6 gal    10^6 gal     Percent
+  -------------------------------------------------------------------------------------------------
+  J1                   JUNCTION     17.41    17.41     0  00:36       0.372       0.372       0.000
+  J2                   JUNCTION     19.12    19.12     0  00:36        0.43        0.43       0.000
+  J3                   JUNCTION     12.26    12.26     0  00:36       0.213       0.213       0.000
+  J4                   JUNCTION      0.00    12.11     0  00:36           0       0.213       0.000
+  J5                   JUNCTION      0.00    28.99     0  00:37           0       0.585       0.000
+  J6                   JUNCTION      0.00    52.50     0  00:37           0        1.07       0.000
+  J7                   JUNCTION     24.12    24.12     0  00:36       0.488       0.488       0.000
+  J8                   JUNCTION      0.00    52.55     0  00:37           0        1.07      -0.000
+  J10                  JUNCTION     22.96    22.96     0  00:36       0.604       0.604       0.000
+  J11                  JUNCTION     12.18    52.42     0  00:37       0.271        1.31       0.000
+  O1                   OUTFALL       0.00    52.38     0  00:37           0         1.3       0.000
+  O2                   OUTFALL       0.00     3.25     0  02:12           0       0.366       0.000
+  
+  
+  *********************
+  Node Flooding Summary
+  *********************
+  
+  Flooding refers to all water that overflows a node, whether it ponds or not.
+  --------------------------------------------------------------------------
+                                                             Total   Maximum
+                                 Maximum   Time of Max       Flood    Ponded
+                        Hours       Rate    Occurrence      Volume    Volume
+  Node                 Flooded       CFS   days hr:min    10^6 gal  1000 ft3
+  --------------------------------------------------------------------------
+  J8                      3.12     48.54      0  00:37       0.706     0.000
+  
+  
+  ***********************
+  Outfall Loading Summary
+  ***********************
+  
+  -----------------------------------------------------------
+                         Flow       Avg       Max       Total
+                         Freq      Flow      Flow      Volume
+  Outfall Node           Pcnt       CFS       CFS    10^6 gal
+  -----------------------------------------------------------
+  O1                    72.81      1.11     52.38       1.304
+  O2                    39.75      0.57      3.25       0.366
+  -----------------------------------------------------------
+  System                56.28      1.68      3.25       1.670
+  
+  
+  ********************
+  Link Flow Summary
+  ********************
+  
+  -----------------------------------------------------------------------------
+                                 Maximum  Time of Max   Maximum    Max/    Max/
+                                  |Flow|   Occurrence   |Veloc|    Full    Full
+  Link                 Type          CFS  days hr:min    ft/sec    Flow   Depth
+  -----------------------------------------------------------------------------
+  C1                   CONDUIT     17.10     0  00:37      8.01    0.01    0.11
+  C2                   CONDUIT     18.23     0  00:38      4.07    0.26    0.60
+  C3                   CONDUIT     12.11     0  00:36     10.98    0.22    0.32
+  C4                   CONDUIT     11.90     0  00:37      5.71    0.01    0.11
+  C5                   CONDUIT     29.05     0  00:37      5.50    0.04    0.21
+  C6                   CONDUIT     23.66     0  00:36      8.91    0.01    0.13
+  C7                   CONDUIT     52.55     0  00:37     18.29    0.25    0.34
+  C10                  CONDUIT     22.88     0  00:37      5.85    0.02    0.17
+  C11                  CONDUIT     52.38     0  00:37     13.10    0.17    0.28
+  C12                  CONDUIT      3.25     0  02:12      4.60    1.08    1.00
+  
+  
+  *************************
+  Conduit Surcharge Summary
+  *************************
+  
+  ----------------------------------------------------------------------------
+                                                           Hours        Hours 
+                         --------- Hours Full --------   Above Full   Capacity
+  Conduit                Both Ends  Upstream  Dnstream   Normal Flow   Limited
+  ----------------------------------------------------------------------------
+  C12                         3.08      3.08      3.08      3.10         3.08
+  
+
+  Analysis begun on:  Sat Jan  7 00:32:11 2023
+  Analysis ended on:  Sat Jan  7 00:32:11 2023
+  Total elapsed time: < 1 sec

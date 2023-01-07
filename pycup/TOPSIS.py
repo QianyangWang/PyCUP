@@ -57,7 +57,7 @@ def topsis(pareto_front, weights=None):
     A_plus, A_minus = calc_ideal(n_data)
     D_plus,D_minus = calc_distances(A_plus,A_minus,n_data)
     scores = D_minus/(D_plus+D_minus)
-    idx_best = np.argmax(scores)
+    idx_best = int(np.argmax(scores))
     optimal_fitness = pareto_front[idx_best]
     optimal_score = scores[idx_best]
     return optimal_fitness,idx_best,optimal_score,scores
@@ -108,7 +108,7 @@ class TopsisAnalyzer:
         A_plus, A_minus = calc_ideal(n_data)
         D_plus, D_minus = calc_distances(A_plus, A_minus, n_data)
         scores = D_minus / (D_plus + D_minus)
-        idx_best = np.argmax(scores)
+        idx_best = int(np.argmax(scores))
         self.OptimalFitness = self._pareto_fitness[idx_best]
         self.OptimalTopsisScore = scores[idx_best]
         self.TopsisScores = scores
@@ -126,6 +126,7 @@ class TopsisAnalyzer:
         """
         self._raw_saver.GbestPosition = self.OptimalSolution
         self._raw_saver.GbestScore = self.OptimalFitness
+        self._raw_saver.TOPSISres = self.OptimalResult
         self._raw_saver.TOPSISidx = self.IdxBest
         self._raw_saver.save(path)
 

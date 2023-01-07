@@ -1,6 +1,6 @@
 
 
-# PyCUP--0.1.2.1 documentation
+# PyCUP--0.1.3 documentation
 
 
 
@@ -35,7 +35,8 @@ pip install pycup
 5. pyDOE
 6. statsmodels
 7. multiprocessing
-8. Anaconda 3 environment is strongly recommended
+8. pandas
+9. Anaconda 3 environment is strongly recommended
 
 ## Project structure
 
@@ -65,6 +66,7 @@ pip install pycup
     | plot.py                     | Includes functions for plotting posterior distributions, 95PPU bands, fitness curves, and sample spaces. |
     | uncertainty_analysis_fun.py | Includes functions for calculating the posterior distribution, uncertainty bands, and uncertainty evaluation metrics such as P factor and R factor. |
     | utilize.py                  | Includes validator and predictor objects for validation and prediction related utilizations. |
+    | TOPSIS.py                   | Include the TopsisAnalyzer to find the global optimum from the Pareto front of the multi-optimization calibration result. |
 
 3. Others
 
@@ -76,6 +78,8 @@ pip install pycup
     | save.py           | Contains RawResult and OptResult saver objects.              |
     | utilize.py        | Validator and Predictor object for validation and prediction. |
     | template.py       | Template functions for advanced utilization of pycup.        |
+    | Reslib            | Including the objects for multi-station-multi-event simulations. |
+    | calc_utils        | Functions called by algorithms.                              |
 
 ## Tutorial
 
@@ -235,7 +239,7 @@ opt_res = save.ProcResultSaver.load(r"D:\example02.txt")
 | .posterior_results              | .sorted_sample_val  | The sorted behaviour samples according to the sample value.  | numpy array  | (n_behaviour, dim)                                           |
 |                                 | .cum_sample         | The accumulative weights of sorted samples.                  | numpy array  | (n_behaviour, dim)                                           |
 | .uncertain_results              | .result_sort        | The sorted results of selected behaviour samples according to the magnitude of the result value at each step. (for time series sim.) | numpy array  | (n_behaviour, len(result))                                   |
-|                                 | .cum_weight         | The accumulative weights of sorted results at each step.     | numpy array  | (n_behaviour, dim)                                           |
+|                                 | .cum_weight         | The accumulative weights/frequencies of sorted results at each step. | numpy array  | (n_behaviour, dim)                                           |
 |                                 | .ppu_line_lower     | The lower boundary of the user defined confidence level (typically 95PPU) | numpy array  | (, len(result))                                              |
 |                                 | .ppu_line_upper     | The upper boundary of the user defined confidence level (typically 95PPU) | numpy array  | (, len(result))                                              |
 |                                 | .line_min           | The minimum values of the simulated                          | numpy array  | (, len(result))                                              |
@@ -346,9 +350,22 @@ raw_res = cp.save.RawDataSaver.load(r"RawResult.rst")
 u_fun.likelihood_uncertainty(raw_res,threshold=0.5,ppu=0.95)
 ```
 
+​	Another kind of uncertainty estimation method based on the frequency can also be used:
+
+```python
+import pycup as cp
+import pycup.uncertainty_analysis_fun as u_fun
+
+raw_res = cp.save.RawDataSaver.load(r"RawResult.rst")
+u_fun.frequency_uncertainty(raw_res,threshold=0.5,ppu=0.95,intervals=20)
+```
+
 ​	For MOPSO and GLUE with a multi-objective target function, use the function likelihood_uncertaintyMO.
 
 ```python
+import pycup as cp
+import pycup.uncertainty_analysis_fun as u_fun
+
 raw_res = cp.save.RawDataSaver.load(r"RawResult.rst")
 u_fun.likelihood_uncertaintyMO(raw_res,n_obj=2,thresholds=[0.5,0.2],ppu=0.95,obj_weights=[0.5,0.5])
 ```
@@ -406,7 +423,7 @@ opt_res = save.RawDataSaver.load(r"RawResult.rst")
 plot.plot_2d_sample_space(opt_res,variable_id1=0,variable_id2=1,obj_path="sample_space.jpg")
 ```
 
-<img src="sample_space.jpg" alt="sample_space" style="zoom: 10%;" />
+<img src="img/sample_space.jpg" alt="sample_space" style="zoom: 10%;" />
 
 #### Plot the 3D sample space
 
@@ -417,7 +434,7 @@ opt_res = save.RawDataSaver.load(r"RawResult.rst")
 plot.plot_3d_sample_space(opt_res,variable_id1=0,variable_id2=1,variable_id3=2,obj_path="sample_space.jpg")
 ```
 
-<img src="sample_space3d.jpg" alt="sample_space3d" style="zoom:10%;" />
+<img src="img/sample_space3d.jpg" alt="sample_space3d" style="zoom:10%;" />
 
 #### Plot the 2D fitness space
 
@@ -428,7 +445,7 @@ opt_res = save.RawDataSaver.load(r"RawResult.rst")
 plot.plot_2d_fitness_space(opt_res,variable_id=1,y_lim=(0,))
 ```
 
-<img src="fitness_space.jpg" alt="sample_space" style="zoom:10%;" />
+<img src="img/fitness_space.jpg" alt="sample_space" style="zoom:10%;" />
 
 #### Plot the 3D fitness space
 
@@ -439,7 +456,7 @@ opt_res = save.RawDataSaver.load(r"RawResult.rst")
 plot.plot_3d_fitness_space(opt_res,variable_id1=1,variable_id2=2,obj_path="sample_space.jpg")
 ```
 
-<img src="fitness_space3D.jpg" alt="sample_space" style="zoom:10%;" />
+<img src="img/fitness_space3D.jpg" alt="sample_space" style="zoom:10%;" />
 
 #### Plot the optimization curve(s)
 
@@ -450,7 +467,7 @@ raw_res1 = save.RawDataSaver.load(r"RawResult.rst")
 plot.plot_opt_curves(raw_res1, slim=False, frameon=False, legendlabels=["SSA"],obj_path="opt_curves.jpg")
 ```
 
-<img src="opt_curves.jpg" alt="opt_curves" style="zoom:10%;" />
+<img src="img/opt_curves.jpg" alt="opt_curves" style="zoom:10%;" />
 
 ​	Or you can plot several optimization curves at the same time:
 
@@ -465,7 +482,7 @@ raw_res = [raw_res1,raw_res2,raw_res3]
 plot.plot_opt_curves(raw_res,slim=False,frameon=False,legendlabels=["SSA","GWO","WOA"],linestyle=["--","-","-."],colors=["r","g","b"],obj_path="opt_curves.jpg")
 ```
 
-<img src="opt_curves2.jpg" alt="opt_curves2" style="zoom:10%;" />
+<img src="img/opt_curves2.jpg" alt="opt_curves2" style="zoom:10%;" />
 
 #### Plot the 2D Pareto front
 
@@ -491,7 +508,7 @@ saver = save.RawDataSaver.load(path)
 plot.plot_2d_pareto_front(saver,objfunid1=0,objfunid2=1,obj_path="pareto2d.pdf")
 ```
 
-<img src="pareto_front.png" alt="image-20220701155528751" style="zoom:10%;" />
+<img src="img/pareto_front.png" alt="image-20220701155528751" style="zoom:10%;" />
 
 
 
@@ -516,7 +533,7 @@ plot.plot_2d_pareto_front(saver,objfunid1=0,objfunid2=1,
                           topsis_optimum=True)
 ```
 
-<img src="TOPSISpareto2d.jpg" alt="TOPSISpareto2d" style="zoom:10%;" />
+<img src="img/TOPSISpareto2d.jpg" alt="TOPSISpareto2d" style="zoom:10%;" />
 
 #### Plot the 3D Pareto front surface
 
@@ -544,7 +561,7 @@ saver = save.RawDataSaver.load(path)
 plot.plot_3d_pareto_front(saver,objfunid1=0,objfunid2=1,objfunid3=2,obj_path="pareto3d.pdf")
 ```
 
-<img src="pareto_front3d.png" alt="image-20220701161139612" style="zoom:10%;" />
+<img src="img/pareto_front3d.png" alt="image-20220701161139612" style="zoom:10%;" />
 
 ```python
 from pycup import plot,save
@@ -559,7 +576,7 @@ plot.plot_3d_pareto_front(saver,objfunid1=0,objfunid2=1,objfunid3=2,
                           obj_path="TOPSISpareto3d.jpg",topsis_optimum=True)
 ```
 
-<img src="TOPSISpareto3d.jpg" alt="TOPSISpareto3d" style="zoom:10%;" />
+<img src="img/TOPSISpareto3d.jpg" alt="TOPSISpareto3d" style="zoom:10%;" />
 
 #### Plot the 2D multi-objective fitness space
 
@@ -588,7 +605,7 @@ saver = save.RawDataSaver.load(path)
 plot.plot_2d_MO_fitness_space(saver,objfunid1=0,objfunid2=1)
 ```
 
-<img src="MOfitness2D.png" alt="image-20220701161937287" style="zoom:10%;" />
+<img src="img/MOfitness2D.png" alt="image-20220701161937287" style="zoom:10%;" />
 
 #### Plot the 3D multi-objective fitness space
 
@@ -616,7 +633,7 @@ saver = save.RawDataSaver.load(path)
 plot.plot_3d_MO_fitness_space(saver,objfunid1=0,objfunid2=1,objfunid3=2)
 ```
 
-<img src="MOfitness3d.png" alt="image-20220702082210768" style="zoom:10%;" />
+<img src="img/MOfitness3d.png" alt="image-20220702082210768" style="zoom:10%;" />
 
 #### Plot the posterior distribution
 
@@ -627,7 +644,7 @@ opt_res = save.ProcResultSaver.load(r"ProcResult.rst")
 plot.plot_posterior_distribution(opt_res,variable_id=1,obj_path="dis.jpg")
 ```
 
-<img src="dis.jpg" alt="dis" style="zoom:10%;" />
+<img src="img/dis.jpg" alt="dis" style="zoom:10%;" />
 
 ​	You can reverse your main plot and the subplot by setting the "reverse" parameter equal to True.
 
@@ -638,7 +655,7 @@ opt_res = save.ProcResultSaver.load(r"ProcResult.rst")
 plot.plot_posterior_distribution(opt_res,variable_id=1,obj_path="dis.jpg",reverse=True)
 ```
 
-<img src="postdis2.jpg" alt="dis2" style="zoom:10%;" />
+<img src="img/postdis2.jpg" alt="dis2" style="zoom:10%;" />
 
 #### Plot the 3D posterior distributions
 
@@ -655,7 +672,7 @@ plot.plot_3d_posterior_distributions(r_list,variable_id=0,obj_path="dis3d.jpg",
                                      y_ticklabels=["SSA","GLUE","GWO"],  	 									  view_init=(30,-135))
 ```
 
-<img src="dis3d.jpg" alt="dis3d" style="zoom:10%;" />
+<img src="img/dis3d.jpg" alt="dis3d" style="zoom:10%;" />
 
 #### Plot the 3D histograms of normalized weights
 
@@ -673,7 +690,7 @@ plot.plot_3d_posterior_hist(r_list,variable_id=0,obj_path="dis3d.jpg",
                             bar_width=0.6,view_init=(20,30))
 ```
 
-<img src="posthist3d.jpg" alt="posthist3d" style="zoom:10%;" />
+<img src="img/posthist3d.jpg" alt="posthist3d" style="zoom:10%;" />
 
 #### Plot the uncertainty band
 
@@ -696,7 +713,7 @@ for i in t:
 plot.plot_uncertainty_band(opt_res, t, res, ylim=(-600, 600), ticklocs=np.arange(0, 100, 10),legendloc=1)
 ```
 
-<img src="band.jpg" alt="band" style="zoom:15%;" />
+<img src="img/band.jpg" alt="band" style="zoom:15%;" />
 
 ​	To specify a time axis, users can use the function "get_time_labels" in the plot module. 
 
@@ -721,7 +738,7 @@ xticks = plot.get_time_labels("2021-12-01 10:00:00",100,showY=False,showdate=Fal
 plot.plot_uncertainty_band(opt_res,t,res,ylim=(-600,600),ticklocs=np.arange(0,100,10),xticks=xticks,x_label="Time",legendloc=1,obj_path="band.jpg")
 ```
 
-<img src="band2.jpg" alt="band" style="zoom:15%;" />
+<img src="img/band2.jpg" alt="band" style="zoom:15%;" />
 
 #### Plot a radar plot for sensitivity analysis results
 
@@ -736,7 +753,7 @@ r1 = cp.save.RawDataSaver.load("RawResult.rst")
 cp.plot.plot_radar_sensitivity(r1,objfun_id=0,plot=0,linewidth=3,parameter_labels=["x1","x2","x3","x4","x5","x6","x7","x8","x9","x10","x11","x12"])
 ```
 
-<img src="radar.jpg" alt="radar" style="zoom:10%;" />
+<img src="img/radar.jpg" alt="radar" style="zoom:10%;" />
 
 Plot a radar plot for several sensitivity analysis results of different algorithms.
 
@@ -755,7 +772,7 @@ cp.plot.plot_radar_sensitivity([r1, r2, r3, r4, r5], 0, 0, linewidth=3, frameon=
 ["method1", "method2", "method3", "method4", "method5"])
 ```
 
-<img src="radar2.jpg" alt="radar" style="zoom:10%;" />
+<img src="img/radar2.jpg" alt="radar" style="zoom:10%;" />
 
 #### The common argument list of the plotting functions
 
@@ -874,7 +891,7 @@ if __name__ == "__main__":
 
 ​	Sometimes we would have several independent variables that we want to calibrate simultaneously in a model, thus, the problem becomes to a multi-variable optimization problem. For instance, in water quality simulation, sometimes we would treat the chemical oxygen demand (COD, concentration in mg/L) and the total nitrogen (TN, concentration in mg/L) as two independent variables. Then, the decay rates of these two variables are two independent parameters that need different metrics to evaluate their estimation accuracies. In pycup, we provide multi-variable version of all the algorithms for this type of problems. The user defined objective function should return a fitness list that contains the evaluation metrics of all the variables, as well as a result list that contains the estimation results of all the variables. The optimization algorithm is carried out separately for each variable, however, since your model can calculate those variables simultaneously, you do not need to run your model for twice or more to calibrate the variables separately. The following flowchart may help for understanding the mechanism of this process. 
 
-<img src="multi-var.jpg" alt="multi-var" style="zoom:50%;" />
+<img src="img/multi-var.jpg" alt="multi-var" style="zoom:50%;" />
 
 ​	To use the multi-variable calibration function:
 
@@ -996,7 +1013,7 @@ if __name__ == "__main__":
 
 ​	In the practical situation, some models might have been compiled as executable software with a GUI (user interface). However, these softwares generally have a core computational engine, which is an executable (.exe) in the installation folder (typically, the "bin" folder). For instance, the SWMM (swmm5.exe, or one can also use pyswmm [https://pypi.org/project/pyswmm/ ]to control it), VIC, BTOPMC (YHyM132.exe), Flo2D (FLOPRO.exe), and DHI MIKE 11 (mike11.exe). The GUI usually act as an auxiliary tool for the users to construct/modify their models/parameters. After the model construction stage, the GUI is not necessary anymore, although users can press the button "run" in the GUI to execute their simulations. When pressing the "run" button, the GUI is actually calling the computational executable and sending it the message about the current simulation project file. However, this action can also be done automatically by your "CMD" shell command/python (os.system(cmd)).  Users can write several functions using python to automatically modify the parameter, run the simulation, read the result, calculate the performance metrics, and then repeat these processes. Combining with the optimization algorithms, users can actively modify the parameters to obtain a better modeling performance. Here is a conceptual graph that demonstrates the relationships between the modeling software, your model files, and your auto-calibration python program:
 
-<img src="framework.jpg" alt="framework" style="zoom:40%;" />
+<img src="img/framework.jpg" alt="framework" style="zoom:40%;" />
 
 ​    To develop an auto-calibration program using pycup, basically, you should know:
 
@@ -1195,7 +1212,7 @@ if __name__ == "__main__":
 
 ​	To be noticed, the objective function of a validation process should return the fitness value and the modelling result, whereas a prediction process should only return the modelling result.
 
-​	In the validation period considering uncertainty, the 95ppu band will be calculated again. The "run" and "runMP" method of the validator object will return a validation result saver object, which contains the fitness value of all samples, results, PPU upper, PPU lower, Line max, Line min. To use the  Validator  for model validation:
+​	The "run" and "runMP" method of the validator object will return a validation result saver object, which contains the fitness value of all samples and results. To use the  Validator  for model validation:
 
 ```python
 from pycup import save, utilize,evaluation_metrics
@@ -1222,12 +1239,11 @@ def obj_fun(X):
 
 # load an opt/uncertainty analysis result with behaviour samples
 res = save.ProcResultSaver.load(r"ProcResult.rst")
-vldt = utilize.EnsembleValidator(res,95,obj_fun,n_obj=1, rstpath = "ValidationResult.rst", args=())
+vldt = utilize.EnsembleValidator(res,obj_fun,n_obj=1, rstpath = "ValidationResult.rst", args=())
 saver = vldt.run()
 
 #for a multi processing version
 #saver = vldt.runMP(n_jobs=5)
-    
 ```
 
 ​		In the validation stage that only considers best solutions:
@@ -1268,15 +1284,9 @@ saver = vldt.run()
 ```python
 from pycup import save
 
-vldt_res = save.ValidationResultSaver.load("ValidationResult.rst")
-print(vldt_res.ppu_upper)			#only available for ensemble validation
-print(vldt_res.ppu_lower)			#only available for ensemble validation
+vldt_res = save.ValidationRawSaver.load("ValidationResult.rst")
 print(vldt_res.fitness)				
 print(vldt_res.results)
-print(vldt_res.line_max)			#only available for ensemble validation
-print(vldt_res.line_min)			#only available for ensemble validation
-print(vldt_res.best_result)			#equivalent to vldt_res.results for non-ensemble 								         validation
-print(vldt_res.median_prediction)	#only available for ensemble validation
 ```
 
 ​	To make a prediction using your behavioral samples:
@@ -1292,7 +1302,7 @@ def obj_fun(X):
     return  result
 
 res = save.ProcResultSaver.load(r"ProcResult.rst")
-pred = utilize.EnsemblePredictor(res,95,obj_fun, rstpath = "PredResult.rst", args=())
+pred = utilize.EnsemblePredictor(res,obj_fun, rstpath = "PredResult.rst", args=())
 pred.run()
 ```
 
@@ -1319,11 +1329,6 @@ pred.run()
 from pycup import save
 pred_res = save.PredResultSaver.load("PredResult.rst")
 print(pred_res.result)				
-print(pred_res.ppu_upper)				#only available for ensemble prediction
-print(pred_res.ppu_lower)				#only available for ensemble prediction
-print(pred_res.line_max)				#only available for ensemble prediction
-print(pred_res.line_min)				#only available for ensemble prediction
-print(pred_res.median_prediction)		#only available for ensemble prediction
 ```
 
 ​	For the validation and prediction of the multi-objective calibration results, there are several different situations:
@@ -1339,6 +1344,69 @@ print(pred_res.median_prediction)		#only available for ensemble prediction
    utilize.UseTOPSIS = False
    ```
 
+#### Uncertainty analysis for validation/prediction results (only for ensemble validation/prediction)
+
+​	For ensemble validations:
+
+```python
+import pycup as cp
+
+def objective_function(X):
+    pass # your obj fun content
+	return fitness,result
+
+## Ensemble validation
+# load the saver
+saver = cp.save.ProcResultSaver.load(r"ProcResult.rst")
+
+# create a validator
+validator = cp.utilize.EnsembleValidator(saver,n_obj=1,obj_fun=objective_function)
+# run validation--1 process
+validator.run()
+
+# load the validation result saver
+vldt_saver = cp.save.ValidationRawSaver.load(r"ValidationRawSaver.rst")
+
+# post processing
+cp.uncertainty_analysis_fun.validation_frequency_uncertainty(vldt_saver,ppu=95,
+                                                             intervals=20)
+proc_saver = cp.save.ValidationProcSaver.load(r"ValidationProcSaver.rst")
+
+# plot
+validation_data = np.load("validation_data.npy")
+obsx = np.arange(len(validation_data))
+cp.plot.plot_uncertainty_band(proc_saver,obsx,validation_data)
+```
+
+​	For ensemble predictions:
+
+```python
+import pycup as cp
+
+def objective_function(X):
+    pass # your obj fun content
+	return fitness,result
+
+## Ensemble prediction 
+# load the saver
+saver = cp.save.ProcResultSaver.load(r"ProcResult.rst")
+
+# create a predictor
+predictor = cp.utilize.EnsemblePredictor(saver,  obj_fun=objective_function)
+# run prediction--1 process
+predictor.run()
+
+# load the prediction result saver
+pred_saver = cp.save.PredRawSaver.load(r"PredictionRawSaver.rst")
+
+# post processing
+cp.uncertainty_analysis_fun.prediction_frequency_uncertainty(pred_saver, ppu=95, intervals=20)
+proc_saver = cp.save.PredProcSaver.load(r"PredictionProcSaver.rst")
+
+# plot
+cp.plot.plot_uncertainty_band(proc_saver,obsx=None,obsy=None)
+```
+
 #### Saving the archive/record and resuming
 
 ​	In case of any interruptions, the optimization information will be automatically saved in a "Record.rcd" file during the optimization process at the end of each iteration.  Users can load the "Record.rcd" file to resume their optimization process. Take GLUE calibration as an example:
@@ -1352,6 +1420,67 @@ cp.GLUE.run(n = 1000, dim = 30, lb = lb, ub = ub,  fun = uni_fun1,RecordPath="Re
 ```python
 from pycup import save
 save.record_path = "D:\\Record.rcd"
+```
+
+#### pycup.Reslib--multi-station and multi-event calibration
+
+​	The Reslib module supports the environmental modelers for a more convenient calibration/analysis process for the situations that the simulation results at different stations or in different events should be saved. This module allow the users to extract the simulation result at the specific station in a specific event using a sort of dictionary like syntax. For example:
+
+```python
+import pycup as cp
+import numpy as np
+from pycup import GWO
+import random
+from pycup import Reslib,evaluation_metrics
+Reslib.UseResObject = True
+
+def ts_fun1(X):
+	# a simple example, this would not be practical
+    t = np.arange(100)
+    obs = np.sin(t) * 2.1 + np.tan(t) * 5.2**3 + random.random() +1
+    res = np.sin(t) * X[0] + np.tan(t) * X[1]**3
+    fitness = evaluation_metrics.OneMinusNSE(obs,res)
+    result1 = res[0:20].reshape(1,-1)
+    result2 = res[20:50].reshape(1,-1)
+    result3 = res[50:].reshape(1,-1)
+    res = Reslib.SimulationResult()
+    res.add_station("Station1")
+    res.add_station("Station2")
+    res["Station1"].add_event("event1",result1)
+    res["Station2"].add_event("event1",result2)
+    res["Station2"].add_event("event2",result3)
+    return fitness, res
+
+
+if __name__ == "__main__":
+    lb = np.ones(2)
+    ub = 5*np.ones(2)
+    GWO.run(20, 2, lb, ub, 2, ts_fun1)
+    raw_res = cp.save.RawDataSaver.load(r"RawResult.rst")
+    # extract your result from the ResultDataPackage
+    hr_st1_e1 = raw_res.historical_results["Station1"]["event1"]
+    print(hr_st1_e1)
+```
+
+​	When the Reslib has been used, the simulation results saved in the RawDataSaver/ProcResultSaver objects are no longer np.array. When plotting the uncertainty bands using the pycup.plot module, please always specify the station name and the event name. For example:	
+
+```python
+from pycup import plot, save
+post_saver = save.ProcResultSaver.load("ProcResult.rst")
+plot.plot_uncertainty_band(post_saver,obsx=np.arange(len(data)),
+						   obsy=data,station="Station1",
+                           event="event1")
+```
+
+The simulation results can also be exported using the Reslib.DatabaseWriter, the xlsx and h5/hdf5 files are supported.
+
+```python
+dbr = Reslib.DataBaseWriter(raw_res.historical_results,
+                        	raw_res.historical_samples,
+                            raw_res.historical_fitness,
+                            dir=r"D:\SimulationResults",
+                            fmt="xlsx")
+dbr.write2DB()
 ```
 
 ### Author's gift -- for some problems that you may meet when calibrating a model with executable.
@@ -1489,11 +1618,11 @@ if __name__ == "__main__":
     cp.plot.plot_posterior_distribution(opt_res, variable_id=2, x_label="Variable 3",obj_path="dis2.jpg", reverse=True)
 ```
 
-<img src="dis0.jpg" alt="dis0" style="zoom:10%;" />
+<img src="img/dis0.jpg" alt="dis0" style="zoom:10%;" />
 
-<img src="dis1.jpg" alt="dis1" style="zoom:10%;" />
+<img src="img/dis1.jpg" alt="dis1" style="zoom:10%;" />
 
-<img src="dis2.jpg" alt="dis2" style="zoom:10%;" />
+<img src="img/dis2.jpg" alt="dis2" style="zoom:10%;" />
 
 
 
@@ -1525,13 +1654,13 @@ if __name__ == "__main__":
 
 ```
 
-<img src="sampleGLUE.jpg" alt="sampleGLUE" style="zoom:10%;" />
+<img src="img/sampleGLUE.jpg" alt="sampleGLUE" style="zoom:10%;" />
 
-<img src="sampleGWO.jpg" alt="sampleGWO" style="zoom:10%;" />
+<img src="img/sampleGWO.jpg" alt="sampleGWO" style="zoom:10%;" />
 
-<img src="fitnessGLUE.jpg" alt="fitnessGLUE" style="zoom:10%;" />
+<img src="img/fitnessGLUE.jpg" alt="fitnessGLUE" style="zoom:10%;" />
 
-<img src="fitnessGWO.jpg" alt="fitnessGWO" style="zoom:10%;" />
+<img src="img/fitnessGWO.jpg" alt="fitnessGWO" style="zoom:10%;" />
 
 #### Example 3: using PSO to calibrate an SVR model
 
@@ -1602,22 +1731,14 @@ if __name__ == "__main__":
     plot.plot_2d_sample_space(raw_res, variable_id1=0, variable_id2=1,x_label="C",y_label="Gamma", obj_path="sample2dSVR.jpg")
     plot.plot_3d_fitness_space(raw_res, variable_id1=0, variable_id2=1,x_label="C",y_label="Gamma", obj_path="sample3dSVR.jpg")
     opt_res = save.ProcResultSaver.load(r"proc_svr.rst")
-    plot.plot_posterior_distribution(opt_res, variable_id=0,x_label="C", obj_path="disC.jpg", reverse=False, subloc=8)
-    plot.plot_posterior_distribution(opt_res, variable_id=1,x_label="Gamma", obj_path="disGamma.jpg", reverse=False, subloc=8)
     plot.plot_opt_curves(raw_res, slim=False, frameon=False, legendlabels=["PSO"], obj_path="curveSVR.jpg")
 ```
 
-<img src="sample2dSVR.jpg" alt="sample2dSVR" style="zoom:10%;" />
+<img src="img/sample2dSVR.jpg" alt="sample2dSVR" style="zoom:10%;" />
 
-<img src="sample3dSVR.jpg" alt="sample3dSVR" style="zoom:10%;" />
+<img src="img/sample3dSVR.jpg" alt="sample3dSVR" style="zoom:10%;" />
 
-<img src="disC.jpg" alt="disC" style="zoom:10%;" />
-
-<img src="disC.jpg" alt="disC" style="zoom:10%;" />
-
-<img src="disGamma.jpg" alt="disGamma" style="zoom:10%;" />
-
-<img src="curveSVR.jpg" alt="curveSVR" style="zoom:9.2%;" />
+<img src="img/curveSVR.jpg" alt="curveSVR" style="zoom:9.2%;" />
 
 ## Theoretical foundations
 
@@ -1625,7 +1746,7 @@ if __name__ == "__main__":
 
 ​	All the swarm-optimization algorithms have a similar work flow as shown in the following figure. Firstly, the objective function, dimension (num. parameters), population size, searching boundary, and maximum iterations should be defined. Then, the population is initialized using a random sampling technique. After that, each individual in the population will be used to calculate the objective function value (fitness). Subsequently, the population will be updated according to the  mechanism of a specific algorithm. 
 
-<img src="algorithm_wf.png" alt="algorithm_wf" style="zoom:55%;" />
+<img src="img/algorithm_wf.png" alt="algorithm_wf" style="zoom:55%;" />
 
 ​	In pycup, we made some improvements/modifications on the algorithms, the modified work flow as follows:
 
@@ -1654,7 +1775,7 @@ if __name__ == "__main__":
 
 ​	Opposition-Based Learning (OBL)  is an optimization strategy used to improve the diversity of optimization algorithm and enhance its generated solutions.  Tizhoosh (2005) proposed the Elite opposition-based learning based on the OBL theory. Several studies have verified that the OBL and EOBL can obtain a solutions that close to global optimal solution with a higher probability.  EOBL strategy relies on the elite individual to lead the population towards the global solution. For an elite individual, the opposition point of it can be calculated as:
 
-![image-20220626215617667](EOBL.png)
+![image-20220626215617667](img/EOBL.png)
 
 where, S is a random number in [0,1],  da and db are the dynamic minimum and maximum boundary of the elite solution set, xi,j is the elite individual. For more details about the EOBL, users can see Sihwail et al. (2020).
 
@@ -1662,27 +1783,35 @@ where, S is a random number in [0,1],  da and db are the dynamic minimum and max
 
 ​	In pycup, the sensitivity analysis is carried out using a multiple linear regression method. The sensitivity of parameters can be obtained according to the t-test statistics. The multiple-linear regression and t-test is relying on statsmodels.api.  Users can visit statsmodels.api's website at https://github.com/statsmodels/statsmodels for more information.
 
-### Uncertainty analysis
+### Likelihood based-uncertainty analysis
 
-​	The uncertainty analysis method used in this package is same as the one in GLUE. In this method, a likelihood function should be firstly defined. For swarm optimization algorithms, the reciprocal value of the objective function is used as the likelihood function. Use the one minus Nash-Sutcliffe efficiency coefficient as an example (the algorithm is to minimize the value), then we have:
+​	The likelihood uncertainty analysis method used in this package is same as the one in GLUE. In this method, a likelihood function should be firstly defined. For swarm optimization algorithms, the reciprocal value of the objective function is used as the likelihood function. Use the one minus Nash-Sutcliffe efficiency coefficient as an example (the algorithm is to minimize the value), then we have:
 
-![image-20220627100319759](uncertainty1.png)
+![image-20220627100319759](img/uncertainty1.png)
 
-![image-20220627100236456](uncertainty2.png)
+![image-20220627100236456](img/uncertainty2.png)
 
 ​	Subsequently, the behavioral solution set is obtained according to the historical searching results and the  user-defined threshold value. The posterior distribution and uncertainty band is calculated using the following equations: 
 
-![image-20220627090943574](uncertainty3.png)
+![image-20220627090943574](img/uncertainty3.png)
 
-![image-20220627091050040](uncertainty4.png)
+![image-20220627091050040](img/uncertainty4.png)
 
 where C is a coefficient that makes the summation of Lp[Θ|Y] equal to 1;  L0[Θ]  is the prior distribution weight, in this package the prior distribution is assumed as a uniform distribution (same as relevant studies); Ly[Θ|Y] is the calculated likelihood value; Pt(Zt<z) is the cumulative probability that the prediction target value is lower than the given z value;  Lp[Θi] is the normalized weight. 
 
 ​	Generally, current studies use P-factor and R-factor as the uncertainty evaluation metrics. P-factor is the proportion of  measured data bracketed by the 95PPU band. R-factor is a value of the average distance between the upper and lower 95PPU and is expressed as the value of the average 95PPU thickness divided by the standard deviation of the observations. The equations for r-factor as follows:
 
-![image-20220627160103155](uncertainty5.png)
+![image-20220627160103155](img/uncertainty5.png)
 
-![image-20220627160120170](uncertainty6.png)
+![image-20220627160120170](img/uncertainty6.png)
+
+### Frequency based-uncertainty analysis
+
+​	The frequency based uncertainty analysis is only for the prediction uncertainty estimation. It can also generate the 95PPU prediction boundaries just like the GLUE method. However, it is not capable of estimating the parameter uncertainty. This method is same as that has been widely used in SWAT-CUP.
+
+​	The method uses all the behavioral solutions (generated using the given threshold value) for the prediction uncertainty estimation. It sorts the simulation results according to their values and calculate the cumulative frequency distribution. Then, the 2.5%~97.5% (take the 95PPU as an example) prediction boundary is calculated. Since the cumulative frequency distribution will be a discrete series, our program estimate the exact boundary using the triangle proportional theorem. For example:
+
+<img src="img/triangle.png" alt="triangle" style="zoom:40%;" />
 
 ## References
 

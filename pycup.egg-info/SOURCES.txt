@@ -7,6 +7,7 @@ pycup/MODE.py
 pycup/MOPSO.py
 pycup/NSGA2.py
 pycup/PSO.py
+pycup/Reslib.py
 pycup/SCA.py
 pycup/SOA.py
 pycup/SSA.py
@@ -14,6 +15,7 @@ pycup/TOPSIS.py
 pycup/TSA.py
 pycup/WOA.py
 pycup/__init__.py
+pycup/calc_utils.py
 pycup/evaluation_metrics.py
 pycup/multi_jobs.py
 pycup/plot.py

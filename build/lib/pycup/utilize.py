@@ -3,11 +3,13 @@ import numpy as np
 from . import multi_jobs
 from . import uncertainty_analysis_fun as ufun
 from . import progress_bar
+from . import Reslib
 UseTOPSIS = True
+
 
 class EnsembleValidator:
 
-    def __init__(self,opt_saver,ppu,obj_fun,n_obj=1,args=(), rstpath=None):
+    def __init__(self,opt_saver,obj_fun,n_obj,args=(), rstpath=None):
         """
         This is a class for users to carry out the ensemble validation process based on behavioral results obtained
         from uncertainty analysis. The argument opt_saver should be given a pycup.save.ProcResultSaver object (uncertainty
@@ -19,12 +21,14 @@ class EnsembleValidator:
         :param args: the arguments that are expected for the obj_fun
         :param rstpath: the path of the ValidationResultSaver objective, if None, a default path "ValidationResult.rst" will be used.
         """
+
         self.opt_saver = opt_saver
-        self.ppu = ppu
         self.obj_fun = obj_fun
         self.args = args
         self.rstpath = rstpath
         self.n_obj = n_obj
+
+
         if not isinstance(opt_saver,save.ProcResultSaver):
             raise TypeError("The opt_saver object should be pycup.save.ProcResultSaver.")
 
@@ -38,7 +42,10 @@ class EnsembleValidator:
             fitness[i], res = fun(X[i, :], *args)
             res_l.append(res)
             pb.update(i+1)
-        res_l = np.concatenate(res_l)
+        if not Reslib.UseResObject:
+            res_l = np.concatenate(res_l)
+        else:
+            res_l = np.array(res_l, dtype=object)
         return fitness, res_l
 
     def __CalculateFitnessMP(self,X, fun,n_obj, n_jobs, args):
@@ -54,9 +61,13 @@ class EnsembleValidator:
         X = self.opt_saver.behaviour_results.behaviour_samples
         weights = self.opt_saver.behaviour_results.normalized_weight
         fitness, res = self.__CalculateFitness(X,self.obj_fun,self.n_obj,self.args)
+        if Reslib.UseResObject:
+            res = Reslib.ResultDataPackage(l_result=res,method_info="Ensemble validation")
         if self.rstpath is not None:
-            save.val_path = self.rstpath
-        saver = ufun.cal_validation_uncertainty(fitness, res, self.ppu,weights)
+            save.val_raw_path = self.rstpath
+        saver = save.ValidationRawSaver(fitness,res,weights)
+        saver.save()
+        print("")
         print("Analysis Complete!")
         return saver
 
@@ -65,16 +76,20 @@ class EnsembleValidator:
         X = self.opt_saver.behaviour_results.behaviour_samples
         weights = self.opt_saver.behaviour_results.normalized_weight
         fitness, res = self.__CalculateFitnessMP(X,self.obj_fun,self.n_obj,n_jobs,self.args)
+        if Reslib.UseResObject:
+            res = Reslib.ResultDataPackage(l_result=res,method_info="Ensemble validation")
         if self.rstpath is not None:
-            save.val_path = self.rstpath
-        saver = ufun.cal_validation_uncertainty(fitness, res, self.ppu,weights)
+            save.val_raw_path = self.rstpath
+        saver = save.ValidationRawSaver(fitness,res,weights)
+        saver.save()
+        print("")
         print("Analysis Complete!")
         return saver
     
 
 class EnsemblePredictor:
 
-    def __init__(self,opt_saver,ppu,obj_fun,args=(),rstpath=None):
+    def __init__(self,opt_saver,obj_fun,args=(),rstpath=None):
         """
         This is a class for users to carry out the ensemble prediction process based on behavioral results obtained
         from uncertainty analysis. The argument opt_saver should be given a pycup.save.ProcResultSaver object (uncertainty
@@ -87,11 +102,13 @@ class EnsemblePredictor:
         :param args: the arguments that are expected for the obj_fun
         :param rstpath: the path of the PredResultSaver objective, if None, a default path "PredictionResult.rst" will be used.
         """
+
         self.opt_saver = opt_saver
         self.obj_fun = obj_fun
-        self.ppu = ppu
         self.args = args
         self.rstpath = rstpath
+
+
         if not isinstance(opt_saver,save.ProcResultSaver):
             raise TypeError("The opt_saver object should be pycup.save.ProcResultSaver.")
 
@@ -107,7 +124,10 @@ class EnsemblePredictor:
             res = fun(X[i, :], *args)
             res_l.append(res)
             pb.update(i+1)
-        res_l = np.concatenate(res_l)
+        if not Reslib.UseResObject:
+            res_l = np.concatenate(res_l)
+        else:
+            res_l = np.array(res_l, dtype=object)
         return res_l
 
     def __CalculateResultMP(self,X, fun, n_jobs, args):
@@ -122,10 +142,13 @@ class EnsemblePredictor:
         X = self.opt_saver.behaviour_results.behaviour_samples
         weights = self.opt_saver.behaviour_results.normalized_weight
         res = self.__CalculateResult(X,self.obj_fun,self.args)
+        if Reslib.UseResObject:
+            res = Reslib.ResultDataPackage(l_result=res,method_info="Ensemble prediction")
         if self.rstpath is not None:
             save.pred_path = self.rstpath
-        saver = ufun.cal_prediction_uncertainty(res,self.ppu,weights)
+        saver = save.PredRawSaver(res,weights)
         saver.save()
+        print("")
         print("Analysis Complete!")
         return res,saver
 
@@ -134,10 +157,13 @@ class EnsemblePredictor:
         X = self.opt_saver.behaviour_results.behaviour_samples
         weights = self.opt_saver.behaviour_results.normalized_weight
         res = self.__CalculateResultMP(X,self.obj_fun,n_jobs,self.args)
+        if Reslib.UseResObject:
+            res = Reslib.ResultDataPackage(l_result=res,method_info="Ensemble prediction")
         if self.rstpath is not None:
             save.pred_path = self.rstpath
-        saver =  ufun.cal_prediction_uncertainty(res,self.ppu,weights)
+        saver = save.PredRawSaver(res,weights)
         saver.save()
+        print("")
         print("Analysis Complete!")
         return res,saver
 
@@ -177,7 +203,10 @@ class Validator:
             fitness[i], res = fun(X[i,:], *args)
             res_l.append(res)
             pb.update(i+1)
-        res_l = np.concatenate(res_l)
+        if not Reslib.UseResObject:
+            res_l = np.concatenate(res_l)
+        else:
+            res_l = np.array(res_l, dtype=object)
         return fitness, res_l
 
     def __CalculateFitnessMP(self, X, fun,n_obj, n_jobs, args):
@@ -197,11 +226,13 @@ class Validator:
         else:
             X = self.opt_saver.pareto_samples
         fitness, res = self.__CalculateFitness(X, self.obj_fun,self.n_obj, self.args)
+        if Reslib.UseResObject:
+            res = Reslib.ResultDataPackage(l_result=res,method_info="Validation")
         if self.rstpath is not None:
             save.val_path = self.rstpath
-        saver = save.ValidationResultSaver(fitness=fitness,results=res,
-                                           ppu_upper=None,ppu_lower=None,line_max=None,line_min=None,best_result=res,median_prediction=None)
+        saver = save.ValidationRawSaver(fitness=fitness,results=res)
         saver.save()
+        print("")
         print("Analysis Complete!")
         return saver
 
@@ -212,11 +243,13 @@ class Validator:
         else:
             X = self.opt_saver.pareto_samples
         fitness, res = self.__CalculateFitnessMP(X, self.obj_fun,self.n_obj, n_jobs, self.args)
+        if Reslib.UseResObject:
+            res = Reslib.ResultDataPackage(l_result=res,method_info="Validation")
         if self.rstpath is not None:
             save.val_path = self.rstpath
-        saver = save.ValidationResultSaver(fitness=fitness,results=res,
-                                           ppu_upper=None,ppu_lower=None,line_max=None,line_min=None,best_result=res,median_prediction=None)
+        saver = save.ValidationRawSaver(fitness=fitness,results=res)
         saver.save()
+        print("")
         print("Analysis Complete!")
         return saver
 
@@ -254,7 +287,10 @@ class Predictor:
             res = fun(X[i, :], *args)
             res_l.append(res)
             pb.update(i+1)
-        res_l = np.concatenate(res_l)
+        if not Reslib.UseResObject:
+            res_l = np.concatenate(res_l)
+        else:
+            res_l = np.array(res_l, dtype=object)
         return res_l
 
     def __CalculateResultMP(self,X, fun, n_jobs, args):
@@ -270,10 +306,13 @@ class Predictor:
         else:
             X = self.opt_saver.pareto_samples
         res = self.__CalculateResult(X, self.obj_fun, self.args)
+        if Reslib.UseResObject:
+            res = Reslib.ResultDataPackage(l_result=res,method_info="Prediction")
         if self.rstpath is not None:
             save.pred_path = self.rstpath
-        saver = save.PredResultSaver(res=res,ppu_upper=None,ppu_lower=None,line_max=None,line_min=None,median_prediction=None)
+        saver = save.PredRawSaver(res)
         saver.save()
+        print("")
         print("Analysis Complete!")
         return saver
 
@@ -284,9 +323,12 @@ class Predictor:
         else:
             X = self.opt_saver.pareto_samples
         res = self.__CalculateResultMP(X, self.obj_fun, n_jobs, self.args)
+        if Reslib.UseResObject:
+            res = Reslib.ResultDataPackage(l_result=res,method_info="Prediction")
         if self.rstpath is not None:
             save.pred_path = self.rstpath
-        saver = save.PredResultSaver(res=res,ppu_upper=None,ppu_lower=None,line_max=None,line_min=None,median_prediction=None)
+        saver = save.PredRawSaver(res)
         saver.save()
+        print("")
         print("Analysis Complete!")
         return saver

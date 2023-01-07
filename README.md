@@ -1,16 +1,36 @@
 # PyCUP
 
-<img src="https://img.shields.io/badge/Version-0.1.2.1-brightgreen" /><img src="https://img.shields.io/badge/Language-Python-blue" />	
+<img src="https://img.shields.io/badge/Version-0.1.3-brightgreen" /><img src="https://img.shields.io/badge/Language-Python-blue" />	
 
 This is an open-source package designed for (environmental) model calibration and uncertainty analysis. The current version is the very first version, we welcome all comments, suggestions, and improvements.
 
-## v 0.1.2.1 Update
+## v 0.1.3 Update
 
-1. The bug of the algorithm MOPSO when using the function runMP for calibrating modelling softwares has been fixed. (The misused single-processing CalculateFitness function in it)
-2. The function named "CaculateFitness" has been replaced by "CalculateFitness".
-3. The attached documentation file size has been compressed. Therefore, the .whl file size is smaller now.
-4. Most importantly, the TOPSIS method for determining the global optimum of the Pareto front has been provided. By utilizing the pycup.Topsis.TopsisAnalyzer, users can carry out the TOPSIS analysis based on the multi-objective optimization result. The calibration result pycup.save.RawDataSaver can be updated by the TopsisAnalyzer.updateTopsisRawSaver(saveing_path) to obtain the global optimum .GbestPosition and .GbestScore, which are not available before the TOPSIS analysis. For more information, please see the documentation.
-5. The posterior distribution plotting functions in plot.py have been amended. The histograms have been adopted instead of the original bar plots. For more information, see the documentation.
+1. A new model named pycup.Reslib for the convenient multi-station & multi-event calibration.
+2. The pycup.Reslib.DatabaseWriter object to export your historical or behavioral sampling/slimuation results to a simple database. Formats including xlsx and h5/hdf5 are currently supported. （Current only supports the Reslib simulation results.）
+3. A new prediction uncertainty estimation method based on the frequency of the behavioral samples has been appended. The ppu boundary is calculated using the cumulative frequency distribution and the triangle proportionality theorem. (same as the 95ppu estimation method in SWAT-CUP)
+4. The EnsembleValidator and EnsemblePredictor objects have been modified. They will generate ValidationRawSaver and PredRawSaver now. These result savers do not contain the uncertainty analysis results. Users can use the functions in pycup.uncertainty_analysis_fun module to carry out the uncertainty analysis on these savers. (validation/prediction_frequency_uncertainty)
+
+## What does it have
+
+### (1) For model calibration/optimization
+
+1. Single-objective heuristic algorithms including PSO, GWO, MFO, SOA, SCA, SSA, TSA, and WOA.
+2. Multi-objective heuristic algorithms including MOPSO, MODE, and NSGA-II.
+3. Elite opposition strategy modified heuristic algorithms -- with better optimum search abilities.
+4. Statistic based-method LHS-GLUE.
+
+### (2) For sensitivity & uncertainty analysis
+
+1. Likelihood uncertainty estimation used in the GLUE framework for the parameter uncertainty analysis/prediction uncertainty estimation.
+2. The frequency based-uncertainty estimation for the prediction uncertainty estimation.
+3. The multi-linear regression method for the all-at-a-time parameter sensitivity based on statmodels.
+
+### (3) Other convenient features
+
+1. Multi-processing calibration.
+2. Several result plotting functions.
+3. A special simulation result object  for multi-station & multi-event results (of environmental models).
 
 ## How to install
 
@@ -42,14 +62,18 @@ cp.SSA.run(pop = 1000, dim = 30, lb = lb, ub = ub, MaxIter = 30, fun = uni_fun1)
 
 ## Example SWMM (Storm Water Management Model) calibration projects
 
-***IMPORTANT:PLEASE OPEN YOUR PYCHARM OR COMMAND LINE WITH THE ADMINISTRATOR RIGHTS BEFORE EXECUTING THE EXAMPLE PROJECT***
-1. Folder 'PyCUPexample01' contains an SWMM calibration project using single-processing GLUE. Install the dependencies (for example: pip install swmm-api==0.2.0.18.3, pip install pyswmm). Execute the 'Calibrate.py' to calibrate the model. Then, execute the 'PostProcessing.py' for uncertainty analysis.
-2. Folder 'PyCUPexample02' contains an SWMM calibration project using multi-processing EOGWO.
-3. Folder 'PyCUPexample03' contains an SWMM multi-objective calibration project using EOMOPSO. 
+***IMPORTANT: PLEASE OPEN YOUR PYCHARM OR COMMAND LINE WITH THE ADMINISTRATOR RIGHTS BEFORE EXECUTING THE EXAMPLE PROJECT***
+
+#### Location: https://github.com/QianyangWang/PyCUP
+
+1. The example in folder 'Example01-GLUE' contains an SWMM calibration project using single-processing GLUE. Install the dependencies (for example: pip install swmm-api==0.2.0.18.3, pip install pyswmm). Execute the 'Calibrate.py' to calibrate the model. Then, execute the 'PostProcessing.py' for uncertainty analysis.
+2. The example in folder 'Example02-multiprocessing' contains an SWMM calibration project using multi-processing EOGWO.
+3. The example in folder 'Example03-multiobjective' contains an SWMM multi-objective calibration project using EOMOPSO. 
+4. The example in folder 'Example04-validation&prediction' shows how to use our (Ensemble)Validator/(Ensemble)Predictor objects for the validation and prediction of the model using the calibrated parameter (set).
+5. The example in folder 'Example05-multi-station&event' shows how to use the pycup.Reslib.SimulationResult object for the storage of multi-station & multi-event simulation results, as well as the further analysis using them.
 
 <div align=center>
 <img src="https://user-images.githubusercontent.com/116932670/209893309-e67c425f-0eff-47b4-a552-b30d717a138b.png">
 </div>
-
 
 

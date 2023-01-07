@@ -1,6 +1,7 @@
 import multiprocessing as mp
 import numpy as np
 from . import progress_bar
+from .import Reslib
 
 
 def do_multi_jobs(func, params,  n_process,args,pb=False):
@@ -46,7 +47,10 @@ def do_multi_jobs(func, params,  n_process,args,pb=False):
         fitness,  res = results[i].get()
         fitnesses[i] = fitness
         ress.append(res)
-    res_l = np.concatenate(ress)
+    if Reslib.UseResObject:
+        res_l = np.array(ress,dtype=object)
+    else:
+        res_l = np.concatenate(ress)
 
     return fitnesses,  res_l
 
@@ -94,7 +98,10 @@ def do_multi_jobsMO(func, params,  n_process,n_obj,args,pb=False):
         fitness,  res = results[i].get()
         fitnesses[i] = fitness
         ress.append(res)
-    res_l = np.concatenate(ress)
+    if Reslib.UseResObject:
+        res_l = np.array(ress,dtype=object)
+    else:
+        res_l = np.concatenate(ress)
 
     return fitnesses,  res_l
 
@@ -145,7 +152,10 @@ def do_multi_jobsMV(func, params,  n_process,args,pb=False):
             fitnesses[n][i] = fitness[n]
             ress[n].append(res[n])
 
-    res_l = [np.concatenate(ress[n],axis=0) for n in range(num_vars)]
+    if Reslib.UseResObject:
+        res_l = [np.array(ress[n], dtype=object) for n in range(num_vars)]
+    else:
+        res_l = [np.concatenate(ress[n],axis=0) for n in range(num_vars)]
 
     return fitnesses,  res_l
 
@@ -192,6 +202,9 @@ def predict_multi_jobs(func, params,  n_process,args,pb=False):
     for i in range(len(results)):
         res = results[i].get()
         ress.append(res)
-    res_l = np.concatenate(ress)
+    if Reslib.UseResObject:
+        res_l = np.array(ress,dtype=object)
+    else:
+        res_l = np.concatenate(ress)
 
     return res_l

@@ -6,6 +6,9 @@ from . import save
 from . import multi_jobs
 import math
 from . import progress_bar
+from . import Reslib
+from .calc_utils import BorderCheck,SortFitness,SortPosition,check_listitem,record_check,record_checkMV
+from .calc_utils import CalculateFitness,CalculateFitnessMP,CalculateFitness_MV,CalculateFitnessMP_MV
 
 Sampling = "LHS"
 EliteOppoSwitch = True
@@ -55,200 +58,6 @@ def initial_MV(pop, dims, ubs, lbs):
         raise KeyError("The selectable sampling strategies are: 'LHS','Random','Chebyshev','Circle','Logistic','Piecewise','Sine','Singer','Sinusoidal','Tent'.")
 
     return Xs, lbs, ubs
-
-
-def BorderCheck(X, ub, lb, pop, dim):
-    """
-    Border check function. If a solution is out of the given boundaries, it will be mandatorily
-    moved to the boundary.
-
-    :argument
-    X: samples -> np.array, shape = (pop, dim)
-    ub: upper boundaries list -> [np.array, ..., np.array]
-    lb: lower boundary list -> [np.array, ..., np.array]
-    pop: population size -> int
-    dims: num. parameters list -> [int, ..., int]
-
-    :return
-    X: the updated samples
-    """
-    for i in range(pop):
-        for j in range(dim):
-            if X[i, j] > ub[j]:
-                X[i, j] = ub[j]
-            elif X[i, j] < lb[j]:
-                X[i, j] = lb[j]
-    return X
-
-
-def CalculateFitness(X, fun, args):
-    """
-    The fitness calculating function.
-
-    :argument
-    X: samples -> np.array, shape = (pop, dim)
-    fun: The user defined objective function or function in pycup.test_functions. The function
-         should return a fitness value and a calculation result. See pycup.test_functions for
-         more information -> function variable
-    args: A tuple of arguments. Users can use it for obj_fun's customization. For example, the
-          parameter file path and model file path can be stored in this tuple for further use.
-          See the document for more details.
-
-    :returns
-    fitness: The calculated fitness value.
-    res_l: The simulation/calculation results after concatenate. -> np.array, shape = (pop, len(result))
-           For a continuous simulation, the len(result) is equivalent to len(time series)
-    """
-    pop = X.shape[0]
-    fitness = np.zeros([pop, 1])
-    res_l = []
-    for i in range(pop):
-        fitness[i],res = fun(X[i, :], *args)
-        res_l.append(res)
-    res_l = np.concatenate(res_l)
-    return fitness,res_l
-
-
-def CalculateFitness_MV(Xs, fun, args):
-    """
-    The fitness calculating function for multi-variable tasks.
-
-    :argument
-    Xs: a list of the updated samples/solutions
-    fun: The user defined objective function or function in pycup.test_functions. The function
-         should return a fitness value and a calculation result. See pycup.test_functions for
-         more information -> function variable
-    args: A tuple of arguments. Users can use it for obj_fun's customization. For example, the
-          parameter file path and model file path can be stored in this tuple for further use.
-          See the document for more details.
-
-    :returns
-    fitness: A list of calculated fitness values.
-    res_l: A list of simulation/calculation results after concatenate.
-    """
-    num_var = len(Xs)
-    pop = Xs[0].shape[0]
-    fitness = []
-    res_l = []
-    temp_f = []
-    temp_r = []
-    for i in range(pop):
-        sample = [Xs[j][i] for j in range(num_var)]
-        fit, res = fun(sample, *args)
-        res = [i.reshape(1, -1) for i in res]
-        fit = [np.array(i).reshape(-1, 1) for i in fit]
-        temp_f.append(fit)
-        temp_r.append(res)
-
-    for d in range(num_var):
-        hf = [temp_f[i][d] for i in range(pop)] # -> [ [],[],[], ... ]
-        hf = np.concatenate(hf,axis=0)
-        hr = [temp_r[i][d] for i in range(pop)] # -> [ [,,,], [,,,], ... ]
-        hr = np.concatenate(hr,axis=0)
-        fitness.append(hf)
-        res_l.append(hr)
-
-    return fitness, res_l
-
-
-def CalculateFitnessMP(X, fun, n_jobs, args):
-    """
-    The fitness calculating function for multi-processing tasks.
-
-    :argument
-    X: samples -> np.array, shape = (pop, dim)
-    fun: The user defined objective function or function in pycup.test_functions. The function
-         should return a fitness value and a calculation result. See pycup.test_functions for
-         more information -> function variable
-    n_jobs: number of threads/processes -> int
-    args: A tuple of arguments. Users can use it for obj_fun's customization. For example, the
-          parameter file path and model file path can be stored in this tuple for further use.
-          See the document for more details.
-    """
-    fitness, res_l = multi_jobs.do_multi_jobs(func=fun, params=X,  n_process=n_jobs, args=args)
-
-    return fitness,res_l
-
-
-def CalculateFitnessMP_MV(Xs, fun, n_jobs, args):
-    """
-    The fitness calculating function for multi-variable & multi-processing tasks.
-
-    :argument
-    Xs: a list of the updated samples/solutions
-    fun: The user defined objective function or function in pycup.test_functions. The function
-         should return a fitness value and a calculation result. See pycup.test_functions for
-         more information -> function variable
-    n_jobs: number of threads/processes -> int
-    args: A tuple of arguments. Users can use it for obj_fun's customization. For example, the
-          parameter file path and model file path can be stored in this tuple for further use.
-          See the document for more details.
-
-    :returns
-    fitness: A list of calculated fitness values.
-    res_l: A list of simulation/calculation results after concatenate.
-    """
-    fitness, res_l = multi_jobs.do_multi_jobsMV(func=fun, params=Xs, n_process=n_jobs, args=args)
-
-    return fitness, res_l
-
-
-def SortFitness(Fit):
-    """
-    Sort the fitness.
-
-    :argument
-    Fit: fitness array -> np.array, shape = (pop,1)
-
-    :returns
-    fitness: The sorted fitness.
-    index: The corresponding sorted index.
-    """
-    fitness = np.sort(Fit, axis=0)
-    index = np.argsort(Fit, axis=0)
-    return fitness, index
-
-
-def SortPosition(X, index):
-    """
-    Sort the sample according to the rank of fitness.
-
-    :argument
-    X: samples -> np.array, shape = (pop, dim)
-    index: The index of sorted samples according to fitness values. -> np.array, shape = (pop,1)
-    """
-    Xnew = np.zeros(X.shape)
-    for i in range(X.shape[0]):
-        Xnew[i, :] = X[index[i], :]
-    return Xnew
-
-def check_listitem(item1,item2):
-
-    s_flags = [item1[i] == item2[i] for i in range(len(item1))]
-    length = [len(item1[i]) for i in range(len(item1))]
-    same = np.sum(s_flags) == np.sum(length)
-    return same
-
-
-def record_check(pop,dim,lb,ub,a_pop,a_dim,a_lb,a_ub):
-    a = np.sum(lb==a_lb) == len(lb)
-    b = np.sum(ub==a_ub) == len(ub)
-    check_list = (pop==a_pop,dim==a_dim,a,b)
-    if np.sum(check_list) == len(check_list):
-        return True
-    else:
-        return False
-
-
-def record_checkMV(pop,dims,lbs,ubs,a_pop,a_dims,a_lbs,a_ubs):
-    p_sflage = pop == a_pop
-    d_sflage = np.sum(np.array(dims) == np.array(a_dims)) == len(dims)
-    lb_flag = check_listitem(lbs,a_lbs)
-    ub_flag = check_listitem(ubs,a_ubs)
-    if np.sum([p_sflage,d_sflage,lb_flag,ub_flag]) == 4:
-        return True
-    else:
-        return False
 
 
 def run(pop, dim, lb, ub, MaxIter,  fun,RecordPath = None, args=()):
@@ -312,7 +121,7 @@ def run(pop, dim, lb, ub, MaxIter,  fun,RecordPath = None, args=()):
         hf = []
         hr = []
         X, lb, ub = initial(pop, dim, ub, lb)
-        fitness,res = CalculateFitness(X, fun, args)
+        fitness,res = CalculateFitness(X, fun,1, args)
         hr.append(res)
         hs.append(copy.copy(X))
         hf.append(copy.copy(fitness))
@@ -323,14 +132,13 @@ def run(pop, dim, lb, ub, MaxIter,  fun,RecordPath = None, args=()):
         fitnessS, sortIndex = SortFitness(fitness)
         # in the first iteration, the flame is the sorted population
         Xs = SortPosition(X, sortIndex)
-        resS = SortPosition(res, sortIndex)
         GbestScore = copy.copy(fitnessS[0])
         GbestPosition = np.zeros([1, dim])
         GbestPosition[0, :] = copy.copy(Xs[0, :])
         Curve = np.zeros([MaxIter, 1])
         record = save.SwarmRecord(pop=pop,dim=dim,lb=lb,ub=ub,hf=hf,hs=hs,hr=hr,
                          GbestPosition=GbestPosition,GbestScore=GbestScore,Curve=Curve,X=X,fitness=fitness,iteration=0,
-                         Xs=Xs,fitnessS=fitnessS,resS=resS)
+                         Xs=Xs,fitnessS=fitnessS)
         record.save()
     else:
         record = save.SwarmRecord.load(RecordPath)
@@ -340,7 +148,6 @@ def run(pop, dim, lb, ub, MaxIter,  fun,RecordPath = None, args=()):
         X = record.X
         Xs = record.Xs
         fitnessS = record.fitnessS
-        resS = record.resS
         fitness = record.fitness
         GbestScore = record.GbestScore
         GbestPosition = record.GbestPosition
@@ -375,20 +182,25 @@ def run(pop, dim, lb, ub, MaxIter,  fun,RecordPath = None, args=()):
 
 
         X = BorderCheck(X, ub, lb, pop, dim)
-        fitness, res = CalculateFitness(X, fun, args)
+        fitness, res = CalculateFitness(X, fun,1, args)
 
         # merge the flame and moth
         fitnessM = np.concatenate([fitnessS,fitness],axis=0)
-        resM = np.concatenate([resS,res],axis=0)
         Xm = np.concatenate([Xs,X],axis=0)
         fitnessM, sortIndexM = SortFitness(fitnessM)
         Xm = SortPosition(Xm, sortIndexM)
-        resM = SortPosition(resM, sortIndexM)
         # update the Xs (flame population)
         Xs = Xm[0:Flame_no,:]
         fitnessS = fitnessM[0:Flame_no]
-        resS = resM[0:Flame_no,:]
 
+        """
+        Here I used the elite sample to replace the sample in X for saving, because that if 
+        fitOppo[j] < fitnessS[j] (the elite is better than the flame), it is better than any
+        of the sample in X. This will not affect the actual search process.
+        """
+        X2file = copy.copy(X)
+        fitness2file = copy.copy(fitness)
+        res2file = copy.copy(res)
         if EliteOppoSwitch:
 
             EliteNumber = int(np.ceil(Xs.shape[0] * OppoFactor))
@@ -398,19 +210,21 @@ def run(pop, dim, lb, ub, MaxIter,  fun,RecordPath = None, args=()):
                 Tub = np.max(XElite, 0)
                 XOppo = np.array([random.random() * (Tlb + Tub) - XElite[j, :] for j in range(EliteNumber)])
                 XOppo = BorderCheck(XOppo, ub, lb, EliteNumber, dim)
-                fitOppo, resOppo = CalculateFitness(XOppo, fun, args)
+                fitOppo, resOppo = CalculateFitness(XOppo, fun,1, args)
                 for j in range(EliteNumber):
                     if fitOppo[j] < fitnessS[j]:
                         fitnessS[j] = copy.copy(fitOppo[j])
                         Xs[j, :] = copy.copy(XOppo[j, :])
-                        res[j, :] = copy.copy(resOppo[j, :])
+
                 fitnessS, sortIndex = SortFitness(fitnessS)
                 Xs = SortPosition(Xs, sortIndex)
-                resS = SortPosition(resS, sortIndex)
+                X2file = np.concatenate([X2file, XOppo], axis=0)
+                fitness2file = np.concatenate([fitness2file, fitOppo], axis=0)
+                res2file = np.concatenate([res2file, resOppo], axis=0)
 
-        hr.append(res)
-        hs.append(copy.copy(X))
-        hf.append(copy.copy(fitness))
+        hr.append(res2file)
+        hs.append(X2file)
+        hf.append(fitness2file)
 
 
         if fitnessS[0] <= GbestScore:
@@ -421,10 +235,12 @@ def run(pop, dim, lb, ub, MaxIter,  fun,RecordPath = None, args=()):
 
         record = save.SwarmRecord(pop=pop,dim=dim,lb=lb,ub=ub,hf=hf,hs=hs,hr=hr,
                          GbestPosition=GbestPosition,GbestScore=GbestScore,Curve=Curve,X=X,fitness=fitness,iteration=t+1,
-                         Xs=Xs,fitnessS=fitnessS,resS=resS)
+                         Xs=Xs,fitnessS=fitnessS)
         record.save()
 
     print("")  # for progress bar
+    if Reslib.UseResObject:
+        hr = Reslib.ResultDataPackage(l_result=hr,method_info="Algorithm")
     raw_saver = save.RawDataSaver(hs, hf, hr, GbestScore, GbestPosition, Curve)
     raw_saver.save(save.raw_path)
 
@@ -486,24 +302,20 @@ def runMP(pop, dim, lb, ub, MaxIter, fun, n_jobs,RecordPath = None, args=()):
         hr = []
 
         X, lb, ub = initial(pop, dim, ub, lb)
-        fitness, res = CalculateFitnessMP(X, fun,n_jobs, args)
+        fitness, res = CalculateFitnessMP(X, fun,1,n_jobs, args)
         hr.append(res)
         hs.append(copy.copy(X))
         hf.append(copy.copy(fitness))
         Progress_Bar.update(len(hf))
-        #X_previous = copy.copy(X)
-        #fitness_previous = copy.copy(fitness)
-        #res_previous = copy.copy(res)
         fitnessS, sortIndex = SortFitness(fitness)
         Xs = SortPosition(X, sortIndex)
-        resS = SortPosition(res, sortIndex)
         GbestScore = copy.copy(fitnessS[0])
         GbestPosition = np.zeros([1, dim])
         GbestPosition[0, :] = copy.copy(Xs[0, :])
         Curve = np.zeros([MaxIter, 1])
         record = save.SwarmRecord(pop=pop,dim=dim,lb=lb,ub=ub,hf=hf,hs=hs,hr=hr,
                          GbestPosition=GbestPosition,GbestScore=GbestScore,Curve=Curve,X=X,fitness=fitness,iteration=0,
-                         Xs=Xs,fitnessS=fitnessS,resS=resS)
+                         Xs=Xs,fitnessS=fitnessS)
         record.save()
     else:
         record = save.SwarmRecord.load(RecordPath)
@@ -513,7 +325,6 @@ def runMP(pop, dim, lb, ub, MaxIter, fun, n_jobs,RecordPath = None, args=()):
         X = record.X
         Xs = record.Xs
         fitnessS = record.fitnessS
-        resS = record.resS
         fitness = record.fitness
         GbestScore = record.GbestScore
         GbestPosition = record.GbestPosition
@@ -547,26 +358,18 @@ def runMP(pop, dim, lb, ub, MaxIter, fun, n_jobs,RecordPath = None, args=()):
                     X[i, j] = distance_to_flame * np.exp(b * r) * np.cos(r * 2 * math.pi) + Xs[Flame_no - 1, j]
 
         X = BorderCheck(X, ub, lb, pop, dim)
-        fitness, res = CalculateFitnessMP(X, fun,n_jobs, args)
-        # merged
-        #fitnessM = np.concatenate([fitness_previous, fitness], axis=0)
-        #resM = np.concatenate([res_previous, res], axis=0)
-        #Xm = np.concatenate([X_previous, X], axis=0)
+        fitness, res = CalculateFitnessMP(X, fun,1,n_jobs, args)
         fitnessM = np.concatenate([fitnessS, fitness], axis=0)
-        resM = np.concatenate([resS, res], axis=0)
         Xm = np.concatenate([Xs, X], axis=0)
         fitnessM, sortIndexM = SortFitness(fitnessM)
         Xm = SortPosition(Xm, sortIndexM)
-        resM = SortPosition(resM, sortIndexM)
         # update the Xs
         Xs = Xm[0:Flame_no, :]
         fitnessS = fitnessM[0:Flame_no]
-        resS = resM[0:Flame_no, :]
 
-        #X_previous = copy.copy(X)
-        #fitness_previous = copy.copy(fitness)
-        #res_previous = copy.copy(res)
-
+        X2file = copy.copy(X)
+        fitness2file = copy.copy(fitness)
+        res2file = copy.copy(res)
         if EliteOppoSwitch:
 
             EliteNumber = int(np.ceil(Xs.shape[0] * OppoFactor))
@@ -577,19 +380,21 @@ def runMP(pop, dim, lb, ub, MaxIter, fun, n_jobs,RecordPath = None, args=()):
 
                 XOppo = np.array([random.random() * (Tlb + Tub) - XElite[j, :] for j in range(EliteNumber)])
                 XOppo = BorderCheck(XOppo, ub, lb, EliteNumber, dim)
-                fitOppo, resOppo = CalculateFitnessMP(XOppo, fun,n_jobs, args)
+                fitOppo, resOppo = CalculateFitnessMP(XOppo, fun,1,n_jobs, args)
                 for j in range(EliteNumber):
                     if fitOppo[j] < fitnessS[j]:
                         fitnessS[j] = copy.copy(fitOppo[j])
                         Xs[j, :] = copy.copy(XOppo[j, :])
-                        res[j, :] = copy.copy(resOppo[j, :])
+
                 fitnessS, sortIndex = SortFitness(fitnessS)
                 Xs = SortPosition(Xs, sortIndex)
-                resS = SortPosition(resS, sortIndex)
+                X2file = np.concatenate([X2file, XOppo], axis=0)
+                fitness2file = np.concatenate([fitness2file, fitOppo], axis=0)
+                res2file = np.concatenate([res2file, resOppo], axis=0)
 
-        hr.append(res)
-        hs.append(copy.copy(X))
-        hf.append(copy.copy(fitness))
+        hr.append(res2file)
+        hs.append(X2file)
+        hf.append(fitness2file)
 
         if fitnessS[0] <= GbestScore:
             GbestScore = copy.copy(fitnessS[0])
@@ -599,10 +404,12 @@ def runMP(pop, dim, lb, ub, MaxIter, fun, n_jobs,RecordPath = None, args=()):
 
         record = save.SwarmRecord(pop=pop,dim=dim,lb=lb,ub=ub,hf=hf,hs=hs,hr=hr,
                          GbestPosition=GbestPosition,GbestScore=GbestScore,Curve=Curve,X=X,fitness=fitness,iteration=t+1,
-                         Xs=Xs,fitnessS=fitnessS,resS=resS)
+                         Xs=Xs,fitnessS=fitnessS)
         record.save()
 
     print("")  # for progress bar
+    if Reslib.UseResObject:
+        hr = Reslib.ResultDataPackage(l_result=hr,method_info="Algorithm")
     raw_saver = save.RawDataSaver(hs, hf, hr, GbestScore, GbestPosition, Curve)
     raw_saver.save(save.raw_path)
 
@@ -656,7 +463,6 @@ def run_MV(pop, dims, lbs, ubs, MaxIter, fun,RecordPath = None, args=()):
         fitness,res = CalculateFitness_MV(X, fun, args)
         Xs = copy.copy(X)
         fitnessS = copy.copy(fitness)
-        resS = copy.copy(res)
         for i in range(num_var):
             hrs[i].append(res[i])
             hss[i].append(copy.copy(X[i]))
@@ -666,7 +472,6 @@ def run_MV(pop, dims, lbs, ubs, MaxIter, fun,RecordPath = None, args=()):
         for n in range(num_var):
             fitnessS[n], sortIndex = SortFitness(fitnessS[n])
             Xs[n] = SortPosition(Xs[n], sortIndex)
-            resS[n] = SortPosition(resS[n], sortIndex)
 
         GbestScore = [copy.copy(fitnessS[n][0]) for n in range(num_var)]
         GbestPosition = [np.zeros([1, dims[n]]) for n in range(num_var)]
@@ -675,7 +480,7 @@ def run_MV(pop, dims, lbs, ubs, MaxIter, fun,RecordPath = None, args=()):
         Curve = [np.zeros([MaxIter, 1]) for i in range(num_var)]
         record = save.SwarmRecord(pop=pop,dim=dims,lb=lbs,ub=ubs,hf=hfs,hs=hss,hr=hrs,
                          GbestPosition=GbestPosition,GbestScore=GbestScore,Curve=Curve,X=X,fitness=fitness,iteration=0,
-                         Xs=Xs,fitnessS=fitnessS,resS=resS)
+                         Xs=Xs,fitnessS=fitnessS)
         record.save()
     else:
         record = save.SwarmRecord.load(RecordPath)
@@ -685,7 +490,6 @@ def run_MV(pop, dims, lbs, ubs, MaxIter, fun,RecordPath = None, args=()):
         X = record.X
         Xs = record.Xs
         fitnessS = record.fitnessS
-        resS = record.resS
         fitness = record.fitness
         GbestScore = record.GbestScore
         GbestPosition = record.GbestPosition
@@ -725,17 +529,16 @@ def run_MV(pop, dims, lbs, ubs, MaxIter, fun,RecordPath = None, args=()):
 
         for n in range(num_var):
             fitnessM = np.concatenate([fitnessS[n],fitness[n]],axis=0)
-            resM = np.concatenate([resS[n],res[n]],axis=0)
             Xm = np.concatenate([Xs[n],X[n]],axis=0)
             fitnessM, sortIndexM = SortFitness(fitnessM)
             Xm = SortPosition(Xm, sortIndexM)
-            resM = SortPosition(resM, sortIndexM)
             # update the Xs
             Xs[n] = Xm[0:Flame_no,:]
             fitnessS[n] = fitnessM[0:Flame_no]
-            resS[n] = resM[0:Flame_no,:]
 
-
+        X2file = copy.copy(X)
+        fitness2file = copy.copy(fitness)
+        res2file = copy.copy(res)
         if EliteOppoSwitch:
 
             EliteNumber = int(np.ceil(Xs[0].shape[0] * OppoFactor))
@@ -753,16 +556,18 @@ def run_MV(pop, dims, lbs, ubs, MaxIter, fun,RecordPath = None, args=()):
                         if fitOppo[n][j] < fitness[n][j]:
                             fitnessS[n][j] = copy.copy(fitOppo[n][j])
                             Xs[n][j, :] = copy.copy(XOppo[n][j, :])
-                            resS[n][j, :] = copy.copy(resOppo[n][j, :])
+
                 for n in range(num_var):
                     fitnessS[n], sortIndex = SortFitness(fitnessS[n])
                     Xs[n] = SortPosition(Xs[n], sortIndex)
-                    resS[n] = SortPosition(resS[n], sortIndex)
+                    X2file[n] = np.concatenate([X2file[n],XOppo[n]],axis=0)
+                    fitness2file[n] = np.concatenate([fitness2file[n],fitOppo[n]],axis=0)
+                    res2file[n] = np.concatenate([res2file[n],resOppo[n]],axis=0)
 
         for n in range(num_var):
-            hrs[n].append(res[n])
-            hss[n].append(copy.copy(X[n]))
-            hfs[n].append(copy.copy(fitness[n]))
+            hrs[n].append(res2file[n])
+            hss[n].append(X2file[n])
+            hfs[n].append(fitness2file[n])
 
         for n in range(num_var):
             if fitnessS[n][0] <= GbestScore[n]:
@@ -773,7 +578,7 @@ def run_MV(pop, dims, lbs, ubs, MaxIter, fun,RecordPath = None, args=()):
 
         record = save.SwarmRecord(pop=pop,dim=dims,lb=lbs,ub=ubs,hf=hfs,hs=hss,hr=hrs,
                          GbestPosition=GbestPosition,GbestScore=GbestScore,Curve=Curve,X=X,fitness=fitness,iteration=t+1,
-                         Xs=Xs,fitnessS=fitnessS,resS=resS)
+                         Xs=Xs,fitnessS=fitnessS)
         record.save()
 
     print("")  # for progress bar
@@ -783,7 +588,8 @@ def run_MV(pop, dims, lbs, ubs, MaxIter, fun,RecordPath = None, args=()):
             save.raw_path = save.raw_pathMV[n]
         else:
             save.raw_path = "RawResult_Var{}.rst".format(n + 1)
-
+        if Reslib.UseResObject:
+            hrs[n] = Reslib.ResultDataPackage(l_result=hrs[n], method_info="Algorithm")
         raw_saver = save.RawDataSaver(hss[n], hfs[n], hrs[n], GbestScore[n], GbestPosition[n], Curve[n])
         raw_saver.save(save.raw_path)
 
@@ -838,7 +644,6 @@ def runMP_MV(pop, dims, lbs, ubs, MaxIter, fun,n_jobs,RecordPath = None, args=()
         fitness,res = CalculateFitnessMP_MV(X, fun,n_jobs, args)
         Xs = copy.copy(X)
         fitnessS = copy.copy(fitness)
-        resS = copy.copy(res)
         for i in range(num_var):
             hrs[i].append(res[i])
             hss[i].append(copy.copy(X[i]))
@@ -848,7 +653,6 @@ def runMP_MV(pop, dims, lbs, ubs, MaxIter, fun,n_jobs,RecordPath = None, args=()
         for n in range(num_var):
             fitnessS[n], sortIndex = SortFitness(fitnessS[n])
             Xs[n] = SortPosition(Xs[n], sortIndex)
-            resS[n] = SortPosition(resS[n], sortIndex)
 
         GbestScore = [copy.copy(fitnessS[n][0]) for n in range(num_var)]
         GbestPosition = [np.zeros([1, dims[n]]) for n in range(num_var)]
@@ -857,7 +661,7 @@ def runMP_MV(pop, dims, lbs, ubs, MaxIter, fun,n_jobs,RecordPath = None, args=()
         Curve = [np.zeros([MaxIter, 1]) for i in range(num_var)]
         record = save.SwarmRecord(pop=pop,dim=dims,lb=lbs,ub=ubs,hf=hfs,hs=hss,hr=hrs,
                          GbestPosition=GbestPosition,GbestScore=GbestScore,Curve=Curve,X=X,fitness=fitness,iteration=0,
-                         Xs=Xs,fitnessS=fitnessS,resS=resS)
+                         Xs=Xs,fitnessS=fitnessS)
         record.save()
     else:
         record = save.SwarmRecord.load(RecordPath)
@@ -867,7 +671,6 @@ def runMP_MV(pop, dims, lbs, ubs, MaxIter, fun,n_jobs,RecordPath = None, args=()
         X = record.X
         Xs = record.Xs
         fitnessS = record.fitnessS
-        resS = record.resS
         fitness = record.fitness
         GbestScore = record.GbestScore
         GbestPosition = record.GbestPosition
@@ -907,16 +710,16 @@ def runMP_MV(pop, dims, lbs, ubs, MaxIter, fun,n_jobs,RecordPath = None, args=()
 
         for n in range(num_var):
             fitnessM = np.concatenate([fitnessS[n],fitness[n]],axis=0)
-            resM = np.concatenate([resS[n],res[n]],axis=0)
             Xm = np.concatenate([Xs[n],X[n]],axis=0)
             fitnessM, sortIndexM = SortFitness(fitnessM)
             Xm = SortPosition(Xm, sortIndexM)
-            resM = SortPosition(resM, sortIndexM)
             # update the Xs
             Xs[n] = Xm[0:Flame_no,:]
             fitnessS[n] = fitnessM[0:Flame_no]
-            resS[n] = resM[0:Flame_no,:]
 
+        X2file = copy.copy(X)
+        fitness2file = copy.copy(fitness)
+        res2file = copy.copy(res)
         if EliteOppoSwitch:
 
             EliteNumber = int(np.ceil(Xs[0].shape[0] * OppoFactor))
@@ -934,16 +737,18 @@ def runMP_MV(pop, dims, lbs, ubs, MaxIter, fun,n_jobs,RecordPath = None, args=()
                         if fitOppo[n][j] < fitness[n][j]:
                             fitnessS[n][j] = copy.copy(fitOppo[n][j])
                             Xs[n][j, :] = copy.copy(XOppo[n][j, :])
-                            resS[n][j, :] = copy.copy(resOppo[n][j, :])
+
                 for n in range(num_var):
                     fitnessS[n], sortIndex = SortFitness(fitnessS[n])
                     Xs[n] = SortPosition(Xs[n], sortIndex)
-                    resS[n] = SortPosition(resS[n], sortIndex)
+                    X2file[n] = np.concatenate([X2file[n],XOppo[n]],axis=0)
+                    fitness2file[n] = np.concatenate([fitness2file[n],fitOppo[n]],axis=0)
+                    res2file[n] = np.concatenate([res2file[n],resOppo[n]],axis=0)
 
         for n in range(num_var):
-            hrs[n].append(res[n])
-            hss[n].append(copy.copy(X[n]))
-            hfs[n].append(copy.copy(fitness[n]))
+            hrs[n].append(res2file[n])
+            hss[n].append(X2file[n])
+            hfs[n].append(fitness2file[n])
 
         for n in range(num_var):
             if fitnessS[n][0] <= GbestScore[n]:
@@ -954,7 +759,7 @@ def runMP_MV(pop, dims, lbs, ubs, MaxIter, fun,n_jobs,RecordPath = None, args=()
 
         record = save.SwarmRecord(pop=pop,dim=dims,lb=lbs,ub=ubs,hf=hfs,hs=hss,hr=hrs,
                          GbestPosition=GbestPosition,GbestScore=GbestScore,Curve=Curve,X=X,fitness=fitness,iteration=t+1,
-                         Xs=Xs,fitnessS=fitnessS,resS=resS)
+                         Xs=Xs,fitnessS=fitnessS)
         record.save()
 
     print("")  # for progress bar
@@ -964,7 +769,8 @@ def runMP_MV(pop, dims, lbs, ubs, MaxIter, fun,n_jobs,RecordPath = None, args=()
             save.raw_path = save.raw_pathMV[n]
         else:
             save.raw_path = "RawResult_Var{}.rst".format(n + 1)
-
+        if Reslib.UseResObject:
+            hrs[n] = Reslib.ResultDataPackage(l_result=hrs[n], method_info="Algorithm")
         raw_saver = save.RawDataSaver(hss[n], hfs[n], hrs[n], GbestScore[n], GbestPosition[n], Curve[n])
         raw_saver.save(save.raw_path)
 

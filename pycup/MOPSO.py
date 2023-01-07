@@ -7,6 +7,8 @@ from . import multi_jobs
 import math
 from collections import Counter
 from . import progress_bar
+from . import Reslib
+from .calc_utils import CalculateFitness,CalculateFitnessMP,BorderCheck
 
 VFactor = 0.3 # velocity factor, users can modify this to control the velocity ranges. Default 0.1 * parameter ranges
 EliteOppoSwitch = True # Switch for elite opposition based learning
@@ -38,79 +40,6 @@ def initial(pop, dim, ub, lb):
         raise KeyError("The selectable sampling strategies are: 'LHS','Random','Chebyshev','Circle','Logistic','Piecewise','Sine','Singer','Sinusoidal','Tent'.")
 
     return X, lb, ub
-
-
-
-def BorderCheck(X, ub, lb, pop, dim):
-    """
-    Border check function. If a solution is out of the given boundaries, it will be mandatorily
-    moved to the boundary.
-
-    :argument
-    X: samples -> np.array, shape = (pop, dim)
-    ub: upper boundaries list -> [np.array, ..., np.array]
-    lb: lower boundary list -> [np.array, ..., np.array]
-    pop: population size -> int
-    dims: num. parameters list -> [int, ..., int]
-
-    :return
-    X: the updated samples
-    """
-    for i in range(pop):
-        for j in range(dim):
-            if X[i, j] > ub[j]:
-                X[i, j] = ub[j]
-            elif X[i, j] < lb[j]:
-                X[i, j] = lb[j]
-    return X
-
-
-def CalculateFitness(X,fun,n_obj,args):
-    """
-    The fitness calculating function.
-
-    :argument
-    X: samples -> np.array, shape = (pop, dim)
-    fun: The user defined objective function or function in pycup.test_functions. The function
-         should return a fitness value and a calculation result. See pycup.test_functions for
-         more information -> function variable
-    args: A tuple of arguments. Users can use it for obj_fun's customization. For example, the
-          parameter file path and model file path can be stored in this tuple for further use.
-          See the document for more details.
-
-    :returns
-    fitness: The calculated fitness value.
-    res_l: The simulation/calculation results after concatenate. -> np.array, shape = (pop, len(result))
-           For a continuous simulation, the len(result) is equivalent to len(time series)
-    """
-    pop = X.shape[0]
-    fitness = np.zeros([pop, n_obj])
-    res_l = []
-    for i in range(pop):
-        fitness[i],res = fun(X[i, :],*args)
-        res_l.append(res)
-    res_l = np.concatenate(res_l)
-    return fitness,res_l
-
-
-def CalculateFitnessMP(X,fun,n_obj,n_jobs,args):
-    """
-    The fitness calculating function for multi-processing tasks.
-
-    :argument
-    X: samples -> np.array, shape = (pop, dim)
-    fun: The user defined objective function or function in pycup.test_functions. The function
-         should return a fitness value and a calculation result. See pycup.test_functions for
-         more information -> function variable
-    n_jobs: number of threads/processes -> int
-    args: A tuple of arguments. Users can use it for obj_fun's customization. For example, the
-          parameter file path and model file path can be stored in this tuple for further use.
-          See the document for more details.
-    """
-    fitness, res_l = multi_jobs.do_multi_jobsMO(func=fun, params=X,  n_process=n_jobs,n_obj=n_obj,args=args)
-
-    return fitness,res_l
-
 
 
 def getNonDominationPops(pops, fits,res):
@@ -460,7 +389,9 @@ def run(pop,dim,lb,ub,MaxIter,n_obj,nAr,M,fun,Vmin=None,Vmax=None,RecordPath = N
         archive, arFits,arRes = updateArchive(X, fitness,res, archive, arFits,arRes)
         archive, arFits,arRes = checkArchive(archive, arFits,arRes, nAr, M)
         #GbestPositon = getGBest(X, fitness, archive, arFits, M)
-
+        X2file = copy.copy(X)
+        fitness2file = copy.copy(fitness)
+        res2file = copy.copy(res)
         if EliteOppoSwitch:
 
             EliteNumber = int(np.ceil(archive.shape[0] * OppoFactor))
@@ -474,15 +405,20 @@ def run(pop,dim,lb,ub,MaxIter,n_obj,nAr,M,fun,Vmin=None,Vmax=None,RecordPath = N
                 fitOppo, resOppo = CalculateFitness(XOppo, fun,n_obj, args)
                 for i in range(len(EliteIdx)):
                     notsameflag = np.sum(np.sum(XOppo[i] == archive, axis=1) == XOppo.shape[1])
-                    isDom = fitOppo[i] < arFits[EliteIdx[i]]
-                    if sum(isDom) == n_obj and notsameflag == 0:
+                    isDom1 = fitOppo[i] < arFits[EliteIdx[i]]
+                    isDom2 = fitOppo[i] <= arFits[EliteIdx[i]]
+                    isDom = sum(isDom1) >= 1 and sum(isDom2) == n_obj
+                    if isDom and notsameflag == 0:
                         archive[EliteIdx[i], :] = XOppo[i, :]
                         arFits[EliteIdx[i], :] = fitOppo[i, :]
+                X2file = np.concatenate([X2file,XOppo],axis=0)
+                fitness2file = np.concatenate([fitness2file,fitOppo],axis=0)
+                res2file = np.concatenate([res2file,resOppo],axis=0)
         GbestPositon = getGBest(X, fitness, archive, arFits, M)
 
-        hr.append(res)
-        hs.append(copy.copy(X))
-        hf.append(copy.copy(fitness))
+        hr.append(res2file)
+        hs.append(X2file)
+        hf.append(fitness2file)
         Progress_Bar.update(len(hf))
 
         record = save.MOswarmRecord(pop = pop,dim=dim,lb=lb,ub=ub,hf=hf,hs=hs,hr=hr,X=X,iteration=t+1,n_obj=n_obj,
@@ -493,6 +429,9 @@ def run(pop,dim,lb,ub,MaxIter,n_obj,nAr,M,fun,Vmin=None,Vmax=None,RecordPath = N
     paretoPops, paretoFits,paretoRes = getNonDominationPops(archive, arFits,arRes)
     print("")  # for progress bar
 
+    if Reslib.UseResObject:
+        hr = Reslib.ResultDataPackage(l_result=hr,method_info="Algorithm")
+        paretoRes = Reslib.ResultDataPackage(l_result=paretoRes, method_info="Pareto front")
     raw_saver = save.RawDataSaver(hs, hf, hr, paretoFits=paretoFits, paretoPops=paretoPops,paretoRes=paretoRes,OptType="MO-SWARM")
     raw_saver.save(save.raw_path)
 
@@ -613,7 +552,9 @@ def runMP(pop, dim, lb, ub, MaxIter,  n_obj, nAr, M,fun,n_jobs, Vmin=None, Vmax=
         archive, arFits, arRes = updateArchive(X, fitness, res, archive, arFits, arRes)
         archive, arFits,arRes = checkArchive(archive, arFits,arRes, nAr, M)
         #GbestPositon = getGBest(X, fitness, archive, arFits, M)
-
+        X2file = copy.copy(X)
+        fitness2file = copy.copy(fitness)
+        res2file = copy.copy(res)
         if EliteOppoSwitch:
 
             EliteNumber = int(np.ceil(archive.shape[0] * OppoFactor))
@@ -633,11 +574,14 @@ def runMP(pop, dim, lb, ub, MaxIter,  n_obj, nAr, M,fun,n_jobs, Vmin=None, Vmax=
                     if isDom and notsameflag == 0:
                         archive[EliteIdx[i], :] = XOppo[i, :]
                         arFits[EliteIdx[i], :] = fitOppo[i, :]
+                X2file = np.concatenate([X2file, XOppo], axis=0)
+                fitness2file = np.concatenate([fitness2file, fitOppo], axis=0)
+                res2file = np.concatenate([res2file, resOppo], axis=0)
         GbestPositon = getGBest(X, fitness, archive, arFits, M)
 
-        hr.append(res)
-        hs.append(copy.copy(X))
-        hf.append(copy.copy(fitness))
+        hr.append(res2file)
+        hs.append(X2file)
+        hf.append(fitness2file)
         Progress_Bar.update(len(hf))
 
         record = save.MOswarmRecord(pop = pop,dim=dim,lb=lb,ub=ub,hf=hf,hs=hs,hr=hr,X=X,iteration=t+1,n_obj=n_obj,
@@ -647,6 +591,10 @@ def runMP(pop, dim, lb, ub, MaxIter,  n_obj, nAr, M,fun,n_jobs, Vmin=None, Vmax=
 
     paretoPops, paretoFits, paretoRes = getNonDominationPops(archive, arFits, arRes)
     print("")  # for progress bar
+
+    if Reslib.UseResObject:
+        hr = Reslib.ResultDataPackage(l_result=hr,method_info="Algorithm")
+        paretoRes = Reslib.ResultDataPackage(l_result=paretoRes, method_info="Pareto front")
     raw_saver = save.RawDataSaver(hs, hf, hr, paretoFits=paretoFits, paretoPops=paretoPops,paretoRes=paretoRes,OptType="MO-SWARM")
     raw_saver.save(save.raw_path)
 

@@ -1,8 +1,10 @@
 import pickle
 proc_path = None
 raw_path = None
-val_path = None
-pred_path = None
+val_raw_path = None
+pred_raw_path = None
+val_proc_path = None
+pred_proc_path = None
 record_path = None
 proc_pathMV = []
 raw_pathMV = []
@@ -34,7 +36,8 @@ class ProcResultSaver:
                  median_prediction,
                  paretoPops = None,
                  paretoFits = None,
-                 paretoRes = None
+                 paretoRes = None,
+                 uncertainty_method = None
                  ):
         """
         Uncertainty analysis processed result object
@@ -54,6 +57,7 @@ class ProcResultSaver:
         self.uncertain_results = UncertaintyBandResults(result_sort,cum,ppu_line_lower,ppu_line_upper,line_min,line_max)
         self.pareto_result = ParetoResult(paretoPops,paretoFits,paretoRes)
         self.median_prediction = median_prediction
+        self.uncertainty_method = uncertainty_method
 
     def save(self,path=proc_path):
         if path is None:
@@ -99,6 +103,16 @@ class ProcResultSaver:
             """
         )
 
+    # designed for pycup.Reslib's objects
+    def extract_station_event(self,station,event):
+        self.historical_results.extract_station_event(station,event)
+        self.behaviour_results.extract_station_event(station,event)
+        self.best_result.extract_station_event(station,event)
+        self.uncertain_results.extract_station_event(station,event)
+        self.median_prediction = self.median_prediction[station][event]
+        if self.pareto_result.pareto_results is not None:
+            self.pareto_result.extract_station_event(station,event)
+
 
 class BestResult:
 
@@ -107,12 +121,18 @@ class BestResult:
         self.best_fitness = best_fitness
         self.best_results = best_result
 
+    def extract_station_event(self, station, event):
+        self.best_results = self.best_results[station][event]
+
 
 class ParetoResult:
     def __init__(self,paretoPops,paretoFits,paretoRes):
         self.pareto_samples = paretoPops
         self.pareto_fitness = paretoFits
         self.pareto_results = paretoRes
+
+    def extract_station_event(self, station, event):
+        self.pareto_results = self.pareto_results[station][event]
 
 
 class BehaviourResults:
@@ -123,6 +143,9 @@ class BehaviourResults:
         self.behaviour_results = behaviour_results
         self.normalized_weight = normalized_weight
 
+    def extract_station_event(self, station, event):
+        self.behaviour_results = self.behaviour_results[station][event]
+
 
 class HistoricalResults:
 
@@ -130,6 +153,9 @@ class HistoricalResults:
         self.historical_samples = historical_samples
         self.historical_fitness = historical_fitness
         self.historical_results = historical_results
+
+    def extract_station_event(self, station, event):
+        self.historical_results = self.historical_results[station][event]
 
 
 class PosteriorResults:
@@ -158,6 +184,14 @@ class UncertaintyBandResults:
         self.ppu_line_upper = ppu_line_upper
         self.line_min = line_min
         self.line_max = line_max
+
+    def extract_station_event(self, station, event):
+        self.result_sort = self.result_sort[station][event]
+        self.cum_weight = self.cum_weight[station][event]
+        self.ppu_line_lower = self.ppu_line_lower[station][event]
+        self.ppu_line_upper = self.ppu_line_upper[station][event]
+        self.line_min = self.line_min[station][event]
+        self.line_max = self.line_max[station][event]
 
 
 class RawDataSaver:
@@ -232,9 +266,35 @@ class RawDataSaver:
         return obj
 
 
-class ValidationResultSaver:
+class ValidationRawSaver:
 
-    def __init__(self,fitness,results,ppu_upper,ppu_lower,line_max,line_min,best_result,median_prediction):
+    def __init__(self,fitness,results,weights=None):
+        self.fitness = fitness
+        self.results = results
+        self.weights = weights
+
+
+    def save(self):
+        if val_raw_path is None:
+            path = "ValidationRawSaver.rst"
+        else:
+            path = val_raw_path
+        with open(path, 'wb') as f:
+            str = pickle.dumps(self,protocol=pickle.HIGHEST_PROTOCOL)
+            f.write(str)
+
+    @classmethod
+    def load(cls,path):
+        with open(path, "rb") as f:
+            obj = pickle.load(f)
+        if not isinstance(obj,ValidationRawSaver):
+            raise TypeError("The input saver object should be pycup.save.ValidationRawSaver.")
+        return obj
+
+
+class ValidationProcSaver:
+
+    def __init__(self,fitness,results,ppu_upper,ppu_lower,line_max,line_min,best_result,median_prediction,uncertainty_method = None):
         self.fitness = fitness
         self.results = results
         self.ppu_upper = ppu_upper
@@ -243,12 +303,13 @@ class ValidationResultSaver:
         self.line_min = line_min
         self.best_result = best_result
         self.median_prediction = median_prediction
+        self.uncertainty_method = uncertainty_method
 
     def save(self):
-        if val_path is None:
-            path = "ValidationResult.rst"
+        if val_proc_path is None:
+            path = "ValidationProcSaver.rst"
         else:
-            path = val_path
+            path = val_raw_path
         with open(path, 'wb') as f:
             str = pickle.dumps(self,protocol=pickle.HIGHEST_PROTOCOL)
             f.write(str)
@@ -257,27 +318,63 @@ class ValidationResultSaver:
     def load(cls,path):
         with open(path, "rb") as f:
             obj = pickle.load(f)
-        if not isinstance(obj,ValidationResultSaver):
-            raise TypeError("The input saver object should be pycup.save.ValidationResultSaver.")
+        if not isinstance(obj,ValidationProcSaver):
+            raise TypeError("The input saver object should be pycup.save.ValidationProcSaver.")
+        return obj
+
+    # designed for pycup.Reslib's objects
+    def extract_station_event(self,station,event):
+        self.results = self.results[station][event]
+        self.ppu_upper = self.ppu_upper[station][event]
+        self.ppu_lower = self.ppu_lower[station][event]
+        self.line_max = self.line_max[station][event]
+        self.line_min = self.line_min[station][event]
+        self.best_result = self.best_result[station][event]
+        self.median_prediction = self.median_prediction[station][event]
+
+
+class PredRawSaver:
+
+    def __init__(self,res,weights=None):
+        self.results = res
+        self.weights = weights
+
+    def save(self):
+
+        if pred_raw_path is None:
+            path = "PredictionRawSaver.rst"
+        else:
+            path = pred_raw_path
+        with open(path, 'wb') as f:
+            str = pickle.dumps(self,protocol=pickle.HIGHEST_PROTOCOL)
+            f.write(str)
+
+    @classmethod
+    def load(cls,path):
+        with open(path, "rb") as f:
+            obj = pickle.load(f)
+        if not isinstance(obj,PredRawSaver):
+            raise TypeError("The input saver object should be pycup.save.PredResultSaver.")
         return obj
 
 
-class PredResultSaver:
+class PredProcSaver:
 
-    def __init__(self,res,ppu_upper,ppu_lower,line_max,line_min,median_prediction):
-        self.result = res
+    def __init__(self,res,ppu_upper,ppu_lower,line_max,line_min,median_prediction,uncertainty_method = None):
+        self.results = res
         self.ppu_upper = ppu_upper
         self.ppu_lower = ppu_lower
         self.line_max = line_max
         self.line_min = line_min
         self.median_prediction = median_prediction
+        self.uncertainty_method = uncertainty_method
 
     def save(self):
 
-        if pred_path is None:
-            path = "PredictionResult.rst"
+        if pred_raw_path is None:
+            path = "PredictionProcSaver.rst"
         else:
-            path = pred_path
+            path = pred_raw_path
         with open(path, 'wb') as f:
             str = pickle.dumps(self,protocol=pickle.HIGHEST_PROTOCOL)
             f.write(str)
@@ -286,9 +383,18 @@ class PredResultSaver:
     def load(cls,path):
         with open(path, "rb") as f:
             obj = pickle.load(f)
-        if not isinstance(obj,PredResultSaver):
+        if not isinstance(obj,PredProcSaver):
             raise TypeError("The input saver object should be pycup.save.PredResultSaver.")
         return obj
+
+    # designed for pycup.Reslib's objects
+    def extract_station_event(self,station,event):
+        self.results = self.results[station][event]
+        self.ppu_upper = self.ppu_upper[station][event]
+        self.ppu_lower = self.ppu_lower[station][event]
+        self.line_max = self.line_max[station][event]
+        self.line_min = self.line_min[station][event]
+        self.median_prediction = self.median_prediction[station][event]
 
 
 class RecordSaver:
