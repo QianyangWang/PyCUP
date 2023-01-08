@@ -354,7 +354,7 @@ class PredRawSaver:
         with open(path, "rb") as f:
             obj = pickle.load(f)
         if not isinstance(obj,PredRawSaver):
-            raise TypeError("The input saver object should be pycup.save.PredResultSaver.")
+            raise TypeError("The input saver object should be pycup.save.PredRawSaver.")
         return obj
 
 
@@ -384,7 +384,7 @@ class PredProcSaver:
         with open(path, "rb") as f:
             obj = pickle.load(f)
         if not isinstance(obj,PredProcSaver):
-            raise TypeError("The input saver object should be pycup.save.PredResultSaver.")
+            raise TypeError("The input saver object should be pycup.save.PredProcSaver.")
         return obj
 
     # designed for pycup.Reslib's objects

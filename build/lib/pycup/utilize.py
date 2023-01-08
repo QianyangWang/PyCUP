@@ -4,12 +4,13 @@ from . import multi_jobs
 from . import uncertainty_analysis_fun as ufun
 from . import progress_bar
 from . import Reslib
+
 UseTOPSIS = True
 
 
 class EnsembleValidator:
 
-    def __init__(self,opt_saver,obj_fun,n_obj,args=(), rstpath=None):
+    def __init__(self, opt_saver, obj_fun, n_obj, args=(), rstpath=None):
         """
         This is a class for users to carry out the ensemble validation process based on behavioral results obtained
         from uncertainty analysis. The argument opt_saver should be given a pycup.save.ProcResultSaver object (uncertainty
@@ -28,11 +29,12 @@ class EnsembleValidator:
         self.rstpath = rstpath
         self.n_obj = n_obj
 
-
-        if not isinstance(opt_saver,save.ProcResultSaver):
+        if not isinstance(opt_saver, save.ProcResultSaver):
             raise TypeError("The opt_saver object should be pycup.save.ProcResultSaver.")
 
-    def __CalculateFitness(self,X, fun,n_obj, args):
+    def __CalculateFitness(self, X, fun, n_obj, args):
+        if len(X.shape) == 1:
+            raise ValueError("There is only 1 behaviour result, please modify your threshold in uncertainty analysis.")
         pop = X.shape[0]
         fitness = np.zeros([pop, n_obj])
         res_l = []
@@ -41,55 +43,70 @@ class EnsembleValidator:
         for i in range(pop):
             fitness[i], res = fun(X[i, :], *args)
             res_l.append(res)
-            pb.update(i+1)
+            pb.update(i + 1)
         if not Reslib.UseResObject:
             res_l = np.concatenate(res_l)
         else:
             res_l = np.array(res_l, dtype=object)
         return fitness, res_l
 
-    def __CalculateFitnessMP(self,X, fun,n_obj, n_jobs, args):
-        if n_obj == 1:
-            fitness, res_l = multi_jobs.do_multi_jobs(func=fun, params=X,  n_process=n_jobs, args=args,pb=False)
-        else:
-            fitness, res_l = multi_jobs.do_multi_jobsMO(func=fun, params=X, n_process=n_jobs,n_obj=n_obj, args=args,pb=False)
-
-        return fitness,res_l
+    def __CalculateFitnessMP(self, X, fun, n_obj, n_jobs, args):
+        if len(X.shape) == 1:
+            raise ValueError("There is only 1 behaviour result, please modify your threshold in uncertainty analysis.")
+        total_calc = X.shape[0]
+        iterations = int(np.ceil(total_calc / n_jobs))
+        res_l = []
+        fitness = []
+        pb = progress_bar.ProgressBar(iterations)
+        pb.update(0)
+        for i in range(iterations):
+            batch = X[i * n_jobs:(i + 1) * n_jobs]
+            if n_obj == 1:
+                fit, res = multi_jobs.do_multi_jobs(func=fun, params=batch, n_process=n_jobs, args=args, pb=False)
+            else:
+                fit, res = multi_jobs.do_multi_jobsMO(func=fun, params=batch, n_process=n_jobs, n_obj=n_obj, args=args,
+                                                      pb=False)
+            fitness.append(fit)
+            res_l.append(res)
+            pb.update(i + 1)
+        fitness = np.concatenate(fitness, axis=0)
+        res_l = np.concatenate(res_l, axis=0)
+        return fitness, res_l
 
     def run(self):
         print("Current Task: Ensemble Validation")
         X = self.opt_saver.behaviour_results.behaviour_samples
         weights = self.opt_saver.behaviour_results.normalized_weight
-        fitness, res = self.__CalculateFitness(X,self.obj_fun,self.n_obj,self.args)
+        fitness, res = self.__CalculateFitness(X, self.obj_fun, self.n_obj, self.args)
         if Reslib.UseResObject:
-            res = Reslib.ResultDataPackage(l_result=res,method_info="Ensemble validation")
+            res = Reslib.ResultDataPackage(l_result=res, method_info="Ensemble validation")
         if self.rstpath is not None:
             save.val_raw_path = self.rstpath
-        saver = save.ValidationRawSaver(fitness,res,weights)
+        saver = save.ValidationRawSaver(fitness, res, weights)
         saver.save()
         print("")
         print("Analysis Complete!")
         return saver
 
-    def runMP(self,n_jobs):
+    def runMP(self, n_jobs):
         print("Current Task: Ensemble Validation MP")
         X = self.opt_saver.behaviour_results.behaviour_samples
         weights = self.opt_saver.behaviour_results.normalized_weight
-        fitness, res = self.__CalculateFitnessMP(X,self.obj_fun,self.n_obj,n_jobs,self.args)
+        fitness, res = self.__CalculateFitnessMP(X, self.obj_fun, self.n_obj, n_jobs, self.args)
         if Reslib.UseResObject:
-            res = Reslib.ResultDataPackage(l_result=res,method_info="Ensemble validation")
+            res = Reslib.ResultDataPackage(l_result=res, method_info="Ensemble validation")
         if self.rstpath is not None:
             save.val_raw_path = self.rstpath
-        saver = save.ValidationRawSaver(fitness,res,weights)
+        saver = save.ValidationRawSaver(fitness, res, weights)
         saver.save()
         print("")
         print("Analysis Complete!")
         return saver
-    
+
 
 class EnsemblePredictor:
 
-    def __init__(self,opt_saver,obj_fun,args=(),rstpath=None):
+    def __init__(self, opt_saver, obj_fun, args=(), rstpath=None):
         """
         This is a class for users to carry out the ensemble prediction process based on behavioral results obtained
         from uncertainty analysis. The argument opt_saver should be given a pycup.save.ProcResultSaver object (uncertainty
@@ -108,11 +125,10 @@ class EnsemblePredictor:
         self.args = args
         self.rstpath = rstpath
 
-
-        if not isinstance(opt_saver,save.ProcResultSaver):
+        if not isinstance(opt_saver, save.ProcResultSaver):
             raise TypeError("The opt_saver object should be pycup.save.ProcResultSaver.")
 
-    def __CalculateResult(self,X, fun, args):
+    def __CalculateResult(self, X, fun, args):
 
         if len(X.shape) == 1:
             raise ValueError("There is only 1 behaviour result, please modify your threshold in uncertainty analysis.")
@@ -123,54 +139,65 @@ class EnsemblePredictor:
         for i in range(pop):
             res = fun(X[i, :], *args)
             res_l.append(res)
-            pb.update(i+1)
+            pb.update(i + 1)
         if not Reslib.UseResObject:
             res_l = np.concatenate(res_l)
         else:
             res_l = np.array(res_l, dtype=object)
         return res_l
 
-    def __CalculateResultMP(self,X, fun, n_jobs, args):
+    def __CalculateResultMP(self, X, fun, n_jobs, args):
 
         if len(X.shape) == 1:
             raise ValueError("There is only 1 behaviour result, please modify your threshold in uncertainty analysis.")
-        res_l = multi_jobs.predict_multi_jobs(func=fun, params=X,  n_process=n_jobs, args=args,pb=False)
+        else:
+            total_calc = X.shape[0]
+            iterations = int(np.ceil(total_calc / n_jobs))
+            res_l = []
+            pb = progress_bar.ProgressBar(iterations)
+            pb.update(0)
+            for i in range(iterations):
+                batch = X[i * n_jobs:(i + 1) * n_jobs]
+                res_l.append(
+                    multi_jobs.predict_multi_jobs(func=fun, params=batch, n_process=n_jobs, args=args, pb=False))
+                pb.update(i + 1)
+            res_l = np.concatenate(res_l, axis=0)
         return res_l
 
     def run(self):
         print("Current Task: Ensemble Prediction")
         X = self.opt_saver.behaviour_results.behaviour_samples
         weights = self.opt_saver.behaviour_results.normalized_weight
-        res = self.__CalculateResult(X,self.obj_fun,self.args)
+        res = self.__CalculateResult(X, self.obj_fun, self.args)
         if Reslib.UseResObject:
-            res = Reslib.ResultDataPackage(l_result=res,method_info="Ensemble prediction")
+            res = Reslib.ResultDataPackage(l_result=res, method_info="Ensemble prediction")
         if self.rstpath is not None:
             save.pred_path = self.rstpath
-        saver = save.PredRawSaver(res,weights)
+        saver = save.PredRawSaver(res, weights)
         saver.save()
         print("")
         print("Analysis Complete!")
-        return res,saver
+        return res, saver
 
-    def runMP(self,n_jobs):
+    def runMP(self, n_jobs):
         print("Current Task: Ensemble Prediction MP")
         X = self.opt_saver.behaviour_results.behaviour_samples
         weights = self.opt_saver.behaviour_results.normalized_weight
-        res = self.__CalculateResultMP(X,self.obj_fun,n_jobs,self.args)
+        res = self.__CalculateResultMP(X, self.obj_fun, n_jobs, self.args)
         if Reslib.UseResObject:
-            res = Reslib.ResultDataPackage(l_result=res,method_info="Ensemble prediction")
+            res = Reslib.ResultDataPackage(l_result=res, method_info="Ensemble prediction")
         if self.rstpath is not None:
             save.pred_path = self.rstpath
-        saver = save.PredRawSaver(res,weights)
+        saver = save.PredRawSaver(res, weights)
         saver.save()
         print("")
         print("Analysis Complete!")
-        return res,saver
+        return res, saver
 
 
 class Validator:
 
-    def __init__(self, opt_saver, obj_fun,n_obj, args=(), rstpath=None):
+    def __init__(self, opt_saver, obj_fun, n_obj, args=(), rstpath=None):
         """
         This is a class for users to carry out the validation process based on the best result obtained
         from calibration process. The argument opt_saver should be given a pycup.save.RawDataSaver object (calibration result).
@@ -191,32 +218,44 @@ class Validator:
         if not isinstance(opt_saver, save.RawDataSaver):
             raise TypeError("The opt_saver object should be pycup.save.RawDataSaver.")
 
-    def __CalculateFitness(self, X, fun,n_obj, args):
+    def __CalculateFitness(self, X, fun, n_obj, args):
         if len(X.shape) == 1:
-            X = X.reshape(1,-1)
+            X = X.reshape(1, -1)
         pop = X.shape[0]
         fitness = np.zeros([pop, n_obj])
         res_l = []
         pb = progress_bar.ProgressBar(pop)
         pb.update(0)
         for i in range(pop):
-            fitness[i], res = fun(X[i,:], *args)
+            fitness[i], res = fun(X[i, :], *args)
             res_l.append(res)
-            pb.update(i+1)
+            pb.update(i + 1)
         if not Reslib.UseResObject:
             res_l = np.concatenate(res_l)
         else:
             res_l = np.array(res_l, dtype=object)
         return fitness, res_l
 
-    def __CalculateFitnessMP(self, X, fun,n_obj, n_jobs, args):
+    def __CalculateFitnessMP(self, X, fun, n_obj, n_jobs, args):
         if len(X.shape) == 1:
-            X = X.reshape(1,-1)
-        if n_obj == 1:
-            fitness, res_l = multi_jobs.do_multi_jobs(func=fun, params=X, n_process=n_jobs, args=args,pb=False)
-        else:
-            fitness, res_l = multi_jobs.do_multi_jobsMO(func=fun, params=X, n_process=n_jobs,n_obj=n_obj, args=args,pb=False)
-
+            X = X.reshape(1, -1)
+        total_calc = X.shape[0]
+        iterations = int(np.ceil(total_calc / n_jobs))
+        res_l = []
+        fitness = []
+        pb = progress_bar.ProgressBar(iterations)
+        pb.update(0)
+        for i in range(iterations):
+            batch = X[i * n_jobs:(i + 1) * n_jobs]
+            if n_obj == 1:
+                fit, res = multi_jobs.do_multi_jobs(func=fun, params=batch, n_process=n_jobs, args=args, pb=False)
+            else:
+                fit, res = multi_jobs.do_multi_jobsMO(func=fun, params=batch, n_process=n_jobs, n_obj=n_obj, args=args,
+                                                      pb=False)
+            res_l.append(res)
+            fitness.append(fit)
+        res_l = np.concatenate(res_l, axis=0)
+        fitness = np.concatenate(fitness, axis=0)
         return fitness, res_l
 
     def run(self):
@@ -225,12 +264,12 @@ class Validator:
             X = self.opt_saver.GbestPosition
         else:
             X = self.opt_saver.pareto_samples
-        fitness, res = self.__CalculateFitness(X, self.obj_fun,self.n_obj, self.args)
+        fitness, res = self.__CalculateFitness(X, self.obj_fun, self.n_obj, self.args)
         if Reslib.UseResObject:
-            res = Reslib.ResultDataPackage(l_result=res,method_info="Validation")
+            res = Reslib.ResultDataPackage(l_result=res, method_info="Validation")
         if self.rstpath is not None:
             save.val_path = self.rstpath
-        saver = save.ValidationRawSaver(fitness=fitness,results=res)
+        saver = save.ValidationRawSaver(fitness=fitness, results=res)
         saver.save()
         print("")
         print("Analysis Complete!")
@@ -242,12 +281,12 @@ class Validator:
             X = self.opt_saver.GbestPosition
         else:
             X = self.opt_saver.pareto_samples
-        fitness, res = self.__CalculateFitnessMP(X, self.obj_fun,self.n_obj, n_jobs, self.args)
+        fitness, res = self.__CalculateFitnessMP(X, self.obj_fun, self.n_obj, n_jobs, self.args)
         if Reslib.UseResObject:
-            res = Reslib.ResultDataPackage(l_result=res,method_info="Validation")
+            res = Reslib.ResultDataPackage(l_result=res, method_info="Validation")
         if self.rstpath is not None:
             save.val_path = self.rstpath
-        saver = save.ValidationRawSaver(fitness=fitness,results=res)
+        saver = save.ValidationRawSaver(fitness=fitness, results=res)
         saver.save()
         print("")
         print("Analysis Complete!")
@@ -276,9 +315,9 @@ class Predictor:
         if not isinstance(opt_saver, save.RawDataSaver):
             raise TypeError("The opt_saver object should be pycup.save.RawDataSaver.")
 
-    def __CalculateResult(self,X, fun, args):
+    def __CalculateResult(self, X, fun, args):
         if len(X.shape) == 1:
-            X = X.reshape(1,-1)
+            X = X.reshape(1, -1)
         pop = X.shape[0]
         pb = progress_bar.ProgressBar(pop)
         pb.update(0)
@@ -286,17 +325,26 @@ class Predictor:
         for i in range(pop):
             res = fun(X[i, :], *args)
             res_l.append(res)
-            pb.update(i+1)
+            pb.update(i + 1)
         if not Reslib.UseResObject:
             res_l = np.concatenate(res_l)
         else:
             res_l = np.array(res_l, dtype=object)
         return res_l
 
-    def __CalculateResultMP(self,X, fun, n_jobs, args):
+    def __CalculateResultMP(self, X, fun, n_jobs, args):
         if len(X.shape) == 1:
-            X = X.reshape(1,-1)
-        res_l = multi_jobs.predict_multi_jobs(func=fun, params=X,  n_process=n_jobs, args=args,pb=False)
+            X = X.reshape(1, -1)
+        total_calc = X.shape[0]
+        iterations = int(np.ceil(total_calc / n_jobs))
+        res_l = []
+        pb = progress_bar.ProgressBar(iterations)
+        pb.update(0)
+        for i in range(iterations):
+            batch = X[i * n_jobs:(i + 1) * n_jobs]
+            res_l.append(multi_jobs.predict_multi_jobs(func=fun, params=batch, n_process=n_jobs, args=args, pb=False))
+            pb.update(i + 1)
+        res_l = np.concatenate(res_l, axis=0)
         return res_l
 
     def run(self):
@@ -307,7 +355,7 @@ class Predictor:
             X = self.opt_saver.pareto_samples
         res = self.__CalculateResult(X, self.obj_fun, self.args)
         if Reslib.UseResObject:
-            res = Reslib.ResultDataPackage(l_result=res,method_info="Prediction")
+            res = Reslib.ResultDataPackage(l_result=res, method_info="Prediction")
         if self.rstpath is not None:
             save.pred_path = self.rstpath
         saver = save.PredRawSaver(res)
@@ -324,7 +372,7 @@ class Predictor:
             X = self.opt_saver.pareto_samples
         res = self.__CalculateResultMP(X, self.obj_fun, n_jobs, self.args)
         if Reslib.UseResObject:
-            res = Reslib.ResultDataPackage(l_result=res,method_info="Prediction")
+            res = Reslib.ResultDataPackage(l_result=res, method_info="Prediction")
         if self.rstpath is not None:
             save.pred_path = self.rstpath
         saver = save.PredRawSaver(res)
