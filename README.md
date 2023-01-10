@@ -23,14 +23,15 @@ This is an open-source package designed for (environmental) model calibration an
 ### (2) For sensitivity & uncertainty analysis
 
 1. Likelihood uncertainty estimation used in the GLUE framework for the parameter uncertainty analysis/prediction uncertainty estimation.
-2. The frequency based-uncertainty estimation for the prediction uncertainty estimation.
+2. The frequency based-uncertainty estimation method for the prediction uncertainty estimation.
 3. The multi-linear regression method for the all-at-a-time parameter sensitivity based on statmodels.
 
 ### (3) Other convenient features
 
 1. Multi-processing calibration.
-2. Several result plotting functions.
-3. A special simulation result object  for multi-station & multi-event results (of environmental models).
+2. Recording and resuming during the calibration task.
+3. Several result plotting functions.
+4. A special simulation result object  for multi-station & multi-event results (of environmental models).
 
 ## How to install
 
