@@ -906,7 +906,7 @@ def plot_uncertainty_band(proc_saver,
             median_pred = median_prediction[idx[0]: idx[1]]
             plt.plot(median_pred, color="green", zorder=8, label="Median prediction", linewidth=medianlinewidth,
                      linestyle=medianlinestyle)
-    if obsy and obsx:
+    if obsy is not None and obsx is not None:
         plt.scatter(obsx, obsy, color="royalblue", marker=marker, s=markersize, zorder=10, label="Observations")
     if legend_on:
         plt.legend(loc=legendloc, frameon=frameon, prop={'size': legend_fontsize})
