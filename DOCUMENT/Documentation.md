@@ -372,7 +372,7 @@ u_fun.likelihood_uncertaintyMO(raw_res,n_obj=2,thresholds=[0.5,0.2],ppu=0.95,obj
 
 ### Calculate the P factor and R factor
 
-​	P factor and R factor are the most popular metrics for uncertainty evaluation. When calculating a P factor, you will need an observation data array. Users can call the "calc_p_factor" function in "uncertainty_analysis_fun" module to calculate the P factor.
+​	P factor and R factor are the most commonly used metrics for uncertainty evaluation. When calculating a P factor, you will need an observation data array. Users can call the "calc_p_factor" function in "uncertainty_analysis_fun" module to calculate the P factor.
 
 ```python
 import pycup.uncertainty_analysis_fun as u_fun
@@ -390,6 +390,23 @@ ppu_u = opt_res.uncertain_results.ppu_line_upper
 
 # calculate the P factor
 p = u_fun.calc_p_factor(upper=ppu_u, lower=ppu_l, obs_x=obs_timestep, obs_y=obs_data)
+print(p)
+```
+
+This p-factor calculating function is also capable of doing the calculation when the time steps of the observations are not locating exactly on the time steps of your simulation results. The function will interpolate the PPU bands using linear interpolation. For example, we have a situation like this:
+
+```python
+# assume that you have an observation data like this
+obs_timestep = np.array([0.3,0.5,1.5,2.2,2.8,5.8,7.0])
+obs_data = np.array([0.5,1.0,2.0,34.0,23.0,15.5,0.0])
+
+# you can also define your time step of the PPU bands, 
+# the length of the time step array should equal to the lenth of the PPU series
+sim_x = np.array([0,2,4,8,10])
+
+# calculate the P factor
+p = u_fun.calc_p_factor(upper=ppu_u, lower=ppu_l, obs_x=obs_timestep, 
+                        obs_y=obs_data,sim_x=sim_x)
 print(p)
 ```
 
@@ -1572,13 +1589,6 @@ def callexe(f_model, f_sim):
 
     return  ret
 ```
-
-### Potential problem of multi-site or multi-event calibration
-
-​	For environmental models, sometimes you would need to save and analysis the results from different sites or in different events (e.g., different rainfall events). This situation is not completely supported in this version of the package. However, there are some alternative ways to do this:
-
-1.  (RECOMMENDED) concatenate the these results in the objective function to make sure that the returned result is a numpy 2D array with a shape of (1, total data length). This will not affect the following uncertainty analysis. When you are plotting your uncertainty band results (pycup.plot.plot_uncertainty_band), you can use the argument "idx" (a tuple of the starting index and the ending index) to extract the corresponding simulation data.
-2.  return the simulation results in a 3D numpy array, then use the argument "st_id" of likelihood_uncertainty to perform the uncertainty analysis based on a specific site/event. However, the validation and prediction functions do not support operations like this. 
 
 ### Examples
 

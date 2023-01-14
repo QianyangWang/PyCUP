@@ -1228,10 +1228,35 @@ def prediction_frequency_uncertainty(pred_raw_saver, ppu, intervals=10, approxim
 
 
 
-def calc_p_factor(upper, lower, obs_x, obs_y):
-    x = np.arange(len(upper))
-    f_upper = interp1d(x, upper)
-    f_lower = interp1d(x, lower)
+def calc_p_factor(upper, lower, obs_x, obs_y,sim_x=None,allow_extrapolate=True):
+    """
+    Calculate the p-factor (the percentage of the observations that are bracketed by
+    the lower and upper prediction uncertainty boundaries. The function performs the linear
+    interpolation for the uncertainty bands, then, calculates the p-factor. For the observations
+    at the time between the time steps of your simulation, you can use the argument "sim_x" to
+    enter the time step index of the simulation results. For example, the time of ppu x1 is
+    00:00, x2 is 4:00, and the time of the observations are 2:00 and 3:00, then sim_x = np.array([0,4]),
+    obs_x = np.array([2,3])
+
+    :param upper: the upper ppu boundary (ProcResultSaver.uncertain_results.ppu_line_upper)
+    :param lower: the lower ppu boundary (ProcResultSaver.uncertain_results.ppu_line_upper)
+    :param obs_x: the x index of observations. (if the obs values have the same time step as the
+                  simulation results, the obs_x = np.arange(len(obs_y)))
+    :param obs_y: the observation values.
+    :param sim_x: the x index of simulation results.
+    :param allow_extrapolate: allow the extrapolation when interpolating
+    :return: p-factor
+    """
+    if sim_x is not None:
+        x = sim_x
+    else:
+        x = np.arange(len(upper))
+    if allow_extrapolate:
+        f_upper = interp1d(x, upper,fill_value="extrapolate")
+        f_lower = interp1d(x, lower,fill_value="extrapolate")
+    else:
+        f_upper = interp1d(x, upper)
+        f_lower = interp1d(x, lower)
     y_upper = f_upper(obs_x)
     y_lower = f_lower(obs_x)
     inner = []
@@ -1243,31 +1268,59 @@ def calc_p_factor(upper, lower, obs_x, obs_y):
     return p_facter
 
 
-def calc_r_factor(upper, lower,obs):
+def calc_r_factor(upper, lower,obs_y):
+    """
+    Calculate the r-factor (the metric to evaluate the band width).
+
+    :param upper: the upper ppu boundary (ProcResultSaver.uncertain_results.ppu_line_upper)
+    :param lower: the lower ppu boundary (ProcResultSaver.uncertain_results.ppu_line_upper)
+    :param obs_y: the observation values.
+    :return: r-factor
+    """
 
     dbar = np.average(upper-lower)
-    r_factor = dbar/np.std(obs)
+    r_factor = dbar/np.std(obs_y)
     return r_factor
 
 
 def cal_band_width(upper, lower):
+    """
+    Calculate the width of the uncertainty band.
+
+    :param upper: the upper ppu boundary (ProcResultSaver.uncertain_results.ppu_line_upper)
+    :param lower: the lower ppu boundary (ProcResultSaver.uncertain_results.ppu_line_upper)
+    :return: band width
+    """
     b = np.average(upper-lower)
     return b
 
 
-def cal_relative_deviation(upper, lower,obs,idx_obs=None):
+def cal_relative_deviation(upper, lower,obs_x,obs_y,sim_x=None,allow_extrapolate=True):
     """
-    :param upper:
-    :param lower:
-    :param obs:
-    :param idx_obs: the (location) of the observations, this is for the case that the number of observations is less than the
-           number of values in the simulated series
+    Calculate the relative deviation of the uncertainty band.
+
+    :param upper: the upper ppu boundary (ProcResultSaver.uncertain_results.ppu_line_upper)
+    :param lower: the lower ppu boundary (ProcResultSaver.uncertain_results.ppu_line_upper)
+    :param obs_x: the x index of observations. (if the obs values have the same time step as the
+                  simulation results, the obs_x = np.arange(len(obs_y)))
+    :param obs_y: the observation values.
+    :param sim_x: the x index of simulation results.
+    :param allow_extrapolate:
     :return:
     """
-    if idx_obs is not None:
-        upper = upper[idx_obs]
-        lower = lower[idx_obs]
-    rd = np.average(np.abs(0.5*(upper+lower)-obs)/obs)
+    if sim_x is not None:
+        x = sim_x
+    else:
+        x = np.arange(len(upper))
+    if allow_extrapolate:
+        f_upper = interp1d(x, upper,fill_value="extrapolate")
+        f_lower = interp1d(x, lower,fill_value="extrapolate")
+    else:
+        f_upper = interp1d(x, upper)
+        f_lower = interp1d(x, lower)
+    y_upper = f_upper(obs_x)
+    y_lower = f_lower(obs_x)
+    rd = np.average(np.abs(0.5*(y_upper+y_lower)-obs_y)/obs_y)
     return rd
 
 
