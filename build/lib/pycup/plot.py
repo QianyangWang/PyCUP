@@ -925,6 +925,8 @@ def plot_uncertainty_band(proc_saver,
         labelsize=tick_fontsize,
         direction=tick_dir,
     )
+    if ylim:
+        plt.ylim(ylim[0], ylim[1])
     # rain data
     if twin_x:
         supported_colors = ['r', 'g', 'b', 'y', "brown", "gray", "magenta", "cyan", "orange", "purple"]
@@ -944,8 +946,7 @@ def plot_uncertainty_band(proc_saver,
         )
 
     plt.subplots_adjust(left=pad[0], bottom=pad[1], right=pad[2], top=pad[3])
-    if ylim:
-        plt.ylim(ylim[0], ylim[1])
+
     if slim:
         plt.xlim(0, len(ppu_lower))
     if tight:

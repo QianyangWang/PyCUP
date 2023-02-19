@@ -182,6 +182,7 @@ def SortPosition(X, index):
 def check_listitem(item1,item2):
 
     s_flags = [item1[i] == item2[i] for i in range(len(item1))]
+    s_flags = [np.sum(i) for i in s_flags]
     length = [len(item1[i]) for i in range(len(item1))]
     same = np.sum(s_flags) == np.sum(length)
     return same
