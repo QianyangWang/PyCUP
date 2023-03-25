@@ -17,6 +17,7 @@ pycup/WOA.py
 pycup/__init__.py
 pycup/calc_utils.py
 pycup/evaluation_metrics.py
+pycup/integrate.py
 pycup/multi_jobs.py
 pycup/plot.py
 pycup/progress_bar.py
