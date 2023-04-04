@@ -1,6 +1,6 @@
 # PyCUP
 
-<img src="https://img.shields.io/badge/Version-0.1.4-brightgreen" /><img src="https://img.shields.io/badge/Language-Python-blue" />	
+<img src="https://img.shields.io/badge/Version-0.1.5-brightgreen" /><img src="https://img.shields.io/badge/Language-Python-blue" />	
 
 This is an open-source package designed for (environmental) model calibration and uncertainty analysis. The current version is the very first version, we welcome all comments, suggestions, and improvements.
 
