@@ -7,12 +7,14 @@ from . import multi_jobs
 import math
 from . import progress_bar
 from . import Reslib
-from .calc_utils import BorderCheck,SortFitness,SortPosition,check_listitem,record_check,record_checkMV
+from .calc_utils import BorderChecker,SortFitness,SortPosition,check_listitem,record_check,record_checkMV
 from .calc_utils import CalculateFitness,CalculateFitnessMP,CalculateFitness_MV,CalculateFitnessMP_MV
 
 EliteOppoSwitch = True # Switch for elite opposition based learning
 OppoFactor = 0.1 # proportion of samples to do the elite opposition operation
 Sampling = "LHS"
+BorderCheckMethod = "rebound"
+
 
 def initial(pop, dim, ub, lb):
     """
@@ -109,6 +111,7 @@ def run(pop, dim, lb, ub, MaxIter,  fun,RecordPath = None,args=()):
     print("Lower Bnd.:{}".format(lb))
     print("Upper Bnd.:{}".format(ub))
     Progress_Bar = progress_bar.ProgressBar(MaxIter + 1)
+    checker = BorderChecker(method=BorderCheckMethod)
     a = 2
     if not RecordPath:
         iter = 0
@@ -164,7 +167,7 @@ def run(pop, dim, lb, ub, MaxIter,  fun,RecordPath = None,args=()):
                     X[i,j] = X[i,j] + r1*np.cos(r2)*np.abs(r3*GbestPosition[0,j] - X[i,j])
 
 
-        X = BorderCheck(X, ub, lb, pop, dim)
+        X = checker.BorderCheck(X, ub, lb, pop, dim)
         fitness,res = CalculateFitness(X, fun,1,args)
         fitness, sortIndex = SortFitness(fitness)
         X = SortPosition(X, sortIndex)
@@ -185,7 +188,7 @@ def run(pop, dim, lb, ub, MaxIter,  fun,RecordPath = None,args=()):
                 Tub = np.max(XElite, 0)
 
                 XOppo = np.array([random.random() * (Tlb + Tub) - XElite[j, :] for j in range(EliteNumber)])
-                XOppo = BorderCheck(XOppo, ub, lb, EliteNumber, dim)
+                XOppo = checker.BorderCheck(XOppo, ub, lb, EliteNumber, dim)
                 fitOppo, resOppo = CalculateFitness(XOppo, fun,1, args)
                 for j in range(EliteNumber):
                     if fitOppo[j] < fitness[j]:
@@ -268,6 +271,7 @@ def runMP(pop, dim, lb, ub, MaxIter,  fun,n_jobs,RecordPath = None, args=()):
     print("Lower Bnd.:{}".format(lb))
     print("Upper Bnd.:{}".format(ub))
     Progress_Bar = progress_bar.ProgressBar(MaxIter + 1)
+    checker = BorderChecker(method=BorderCheckMethod)
     a = 2
     if not RecordPath:
         iter = 0
@@ -321,7 +325,7 @@ def runMP(pop, dim, lb, ub, MaxIter,  fun,n_jobs,RecordPath = None, args=()):
                     X[i, j] = X[i, j] + r1 * np.cos(r2) * np.abs(r3 * GbestPosition[0, j] - X[i, j])
 
 
-        X = BorderCheck(X, ub, lb, pop, dim)
+        X = checker.BorderCheck(X, ub, lb, pop, dim)
         fitness, res = CalculateFitnessMP(X, fun,1,n_jobs, args)
         fitness, sortIndex = SortFitness(fitness)
         X = SortPosition(X, sortIndex)
@@ -342,7 +346,7 @@ def runMP(pop, dim, lb, ub, MaxIter,  fun,n_jobs,RecordPath = None, args=()):
                 Tub = np.max(XElite, 0)
 
                 XOppo = np.array([random.random() * (Tlb + Tub) - XElite[j, :] for j in range(EliteNumber)])
-                XOppo = BorderCheck(XOppo, ub, lb, EliteNumber, dim)
+                XOppo = checker.BorderCheck(XOppo, ub, lb, EliteNumber, dim)
                 fitOppo, resOppo = CalculateFitnessMP(XOppo, fun,1, n_jobs, args)
                 for j in range(EliteNumber):
                     if fitOppo[j] < fitness[j]:
@@ -414,6 +418,7 @@ def run_MV(pop, dims, lbs, ubs, MaxIter, fun,RecordPath = None,args=()):
     print("Lower Bnd.:{}".format(lbs))
     print("Upper Bnd.:{}".format(ubs))
     Progress_Bar = progress_bar.ProgressBar(MaxIter + 1)
+    checker = BorderChecker(method=BorderCheckMethod)
     num_var = len(dims)
     a = 2
     if not RecordPath:
@@ -472,7 +477,7 @@ def run_MV(pop, dims, lbs, ubs, MaxIter, fun,RecordPath = None,args=()):
 
 
         for n in range(num_var):
-            X[n] = BorderCheck(X[n], ubs[n], lbs[n], pop, dims[n])
+            X[n] = checker.BorderCheck(X[n], ubs[n], lbs[n], pop, dims[n])
         fitness, res = CalculateFitness_MV(X, fun, args)
         for n in range(num_var):
             fitness[n], sortIndex = SortFitness(fitness[n])
@@ -495,7 +500,7 @@ def run_MV(pop, dims, lbs, ubs, MaxIter, fun,RecordPath = None,args=()):
 
                 XOppo = [np.array([random.random() * (Tlb[n] + Tub[n]) - XElite[n][j, :] for j in range(EliteNumber)]) for n in range(num_var)]
                 for n in range(num_var):
-                    XOppo[n] = BorderCheck(XOppo[n], ubs[n], lbs[n], EliteNumber, dims[n])
+                    XOppo[n] = checker.BorderCheck(XOppo[n], ubs[n], lbs[n], EliteNumber, dims[n])
                 fitOppo, resOppo = CalculateFitness_MV(XOppo, fun, args)
                 for j in range(EliteNumber):
                     for n in range(num_var):
@@ -575,6 +580,7 @@ def runMP_MV(pop, dims, lbs, ubs, MaxIter, fun,n_jobs,RecordPath = None,args=())
     print("Lower Bnd.:{}".format(lbs))
     print("Upper Bnd.:{}".format(ubs))
     Progress_Bar = progress_bar.ProgressBar(MaxIter + 1)
+    checker = BorderChecker(method=BorderCheckMethod)
     num_var = len(dims)
     a = 2
     if not RecordPath:
@@ -635,7 +641,7 @@ def runMP_MV(pop, dims, lbs, ubs, MaxIter, fun,n_jobs,RecordPath = None,args=())
 
 
         for n in range(num_var):
-            X[n] = BorderCheck(X[n], ubs[n], lbs[n], pop, dims[n])
+            X[n] = checker.BorderCheck(X[n], ubs[n], lbs[n], pop, dims[n])
         fitness, res = CalculateFitnessMP_MV(X, fun,n_jobs, args)
         for n in range(num_var):
             fitness[n], sortIndex = SortFitness(fitness[n])
@@ -658,7 +664,7 @@ def runMP_MV(pop, dims, lbs, ubs, MaxIter, fun,n_jobs,RecordPath = None,args=())
 
                 XOppo = [np.array([random.random() * (Tlb[n] + Tub[n]) - XElite[n][j, :] for j in range(EliteNumber)]) for n in range(num_var)]
                 for n in range(num_var):
-                    XOppo[n] = BorderCheck(XOppo[n], ubs[n], lbs[n], EliteNumber, dims[n])
+                    XOppo[n] = checker.BorderCheck(XOppo[n], ubs[n], lbs[n], EliteNumber, dims[n])
                 fitOppo, resOppo = CalculateFitnessMP_MV(XOppo, fun,n_jobs, args)
                 for j in range(EliteNumber):
                     for n in range(num_var):

@@ -1,6 +1,6 @@
 
 
-# PyCUP--0.1.3 documentation
+# PyCUP--0.1.5 documentation
 
 
 
@@ -78,8 +78,8 @@ pip install pycup
     | save.py           | Contains RawResult and OptResult saver objects.              |
     | utilize.py        | Validator and Predictor object for validation and prediction. |
     | template.py       | Template functions for advanced utilization of pycup.        |
-    | Reslib            | Including the objects for multi-station-multi-event simulations. |
-    | calc_utils        | Functions called by algorithms.                              |
+    | Reslib.py         | Including the objects for multi-station-multi-event simulations. |
+    | calc_utils.py     | Functions called by algorithms.                              |
 
 ## Tutorial
 
@@ -870,6 +870,55 @@ cp.SSA.run(pop=3000, dim=30, lb=lb, ub = ub, MaxIter=10,fun=cp.test_functions.un
 | MODE       | False                              |
 | NSGA2      | False                              |
 
+#### Select a border check method for parameter values exceed the search boundaries
+
+​	When carrying out a heuristic algorithm based calibration, the generated sample would exceed the user defined search boundaries. In the former version of PyCUP (versions before 0.1.5), we used an "absorb" border check method, which directly put the value on the corresponding boundaries. This method would generate a lot of similar samples on the search boundary and will result in a relative low diversity. Also, the solution on the boundary usually seems not "natural". This border check process can be represented as:
+
+```python
+for i in range(pop):
+    for j in range(dim):
+        if X[i, j] > ub[j]:
+            X[i, j] = ub[j]
+        elif X[i, j] < lb[j]:
+            X[i, j] = lb[j]
+```
+
+​	In the current version, we provide three kinds of border check mechanisms. Including a "random" border check strategy, which replaces the out-of-bounds value by a random value in the search space. However, sometimes this method would ignore the evolution direction and history. It can be represented as:
+
+```python
+for i in range(pop):
+    for j in range(dim):
+        if X[i, j] > ub[j] or X[i, j] < lb[j]:
+            X[i, j] = lb[j] + random.random() * (ub[j] - lb[j])
+```
+
+​	Another border check method is the "rebound" method. If a solution is out of the given boundaries, it will be replaced by a random number (with an uniform distribution) near the boundary. By using this method, the evolution direction and information can be remained. The "rebound" method is set as the default method in PyCUP and can be represented as:
+
+```python
+for i in range(pop):
+    for j in range(dim):
+        if X[i, j] > ub[j]:
+            X[i, j] = lb[j] + random.uniform(0.95, 1.00) * (ub[j] - lb[j])
+        elif X[i, j] < lb[j]:
+            X[i, j] = lb[j] + random.uniform(0, 0.05) * (ub[j] - lb[j])
+```
+
+​	To switch the border check method, you can define it using the "BorderCheckMethod" variable in the corresponding algorithm module. For example:
+
+```python
+import numpy as np
+import pycup
+from pycup.test_functions import mul_fun1
+
+lb = np.ones(100)*-500
+ub=np.ones(100)*500
+pycup.GWO.BorderCheckMethod = "absorb"
+# pycup.GWO.BorderCheckMethod = "random"
+# pycup.GWO.BorderCheckMethod = "rebound"
+pycup.GWO.EliteOppoSwitch=True
+pycup.GWO.run(30,100,lb,ub,100,mul_fun1)
+```
+
 #### Multi-processing algorithms
 
 ​	Each algorithm that we collected has its multi-processing version. Users can call a multi-processing function using:
@@ -1621,20 +1670,7 @@ if __name__ == "__main__":
 
     raw_res = cp.save.RawDataSaver.load(r"RawResult.rst")
     cp.plot.plot_opt_curves(raw_res)
-    ufun.likelihood_uncertainty(raw_res,10,95)
-    opt_res = cp.save.ProcResultSaver.load(r"ProcResult.rst")
-    cp.plot.plot_posterior_distribution(opt_res, variable_id=0, x_label="Variable 1",obj_path="dis0.jpg", reverse=True)
-    cp.plot.plot_posterior_distribution(opt_res, variable_id=1, x_label="Variable 2",obj_path="dis1.jpg", reverse=True)
-    cp.plot.plot_posterior_distribution(opt_res, variable_id=2, x_label="Variable 3",obj_path="dis2.jpg", reverse=True)
 ```
-
-<img src="img/dis0.jpg" alt="dis0" style="zoom:10%;" />
-
-<img src="img/dis1.jpg" alt="dis1" style="zoom:10%;" />
-
-<img src="img/dis2.jpg" alt="dis2" style="zoom:10%;" />
-
-
 
 #### Example 2: comparison between GLUE and swarm optimization algorithm
 

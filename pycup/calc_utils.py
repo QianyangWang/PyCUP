@@ -1,30 +1,99 @@
 import numpy as np
 from . import multi_jobs
 from . import Reslib
+import random
 
+class BorderChecker:
 
-def BorderCheck(X, ub, lb, pop, dim):
-    """
-    Border check function. If a solution is out of the given boundaries, it will be mandatorily
-    moved to the boundary.
+    def __init__(self, method="absorb"):
+        self.method = self._checkMethod(method)
 
-    :argument
-    X: samples -> np.array, shape = (pop, dim)
-    ub: upper boundaries list -> [np.array, ..., np.array]
-    lb: lower boundary list -> [np.array, ..., np.array]
-    pop: population size -> int
-    dims: num. parameters list -> [int, ..., int]
+    def BorderCheck(self, X, ub, lb, pop, dim):
+        if self.method == "absorb":
+            X = self._absorb(X, ub, lb, pop, dim)
+        elif self.method == "random":
+            X = self._random(X, ub, lb, pop, dim)
+        elif self.method == "rebound":
+            X = self._rebound(X, ub, lb, pop, dim)
+        return X
 
-    :return
-    X: the updated samples
-    """
-    for i in range(pop):
-        for j in range(dim):
-            if X[i, j] > ub[j]:
-                X[i, j] = ub[j]
-            elif X[i, j] < lb[j]:
-                X[i, j] = lb[j]
-    return X
+    def _checkMethod(self, method):
+        if method in ["absorb", "ABSORB", "Absorb", 0, "0"]:
+            return "absorb"
+        elif method in ["random", "RANDOM", "Random", 1, "1"]:
+            return "random"
+        elif method in ["rebound", "REBOUND", "Rebound", 2, "2"]:
+            return "rebound"
+        else:
+            raise ValueError("The border check method should be 'absorb','random', or 'rebound'.")
+
+    def _absorb(self, X, ub, lb, pop, dim):
+        """
+        Absorption border check function. If a solution is out of the given boundaries,
+        it will be mandatorily moved to the boundary.
+
+        :argument
+        X: samples -> np.array, shape = (pop, dim)
+        ub: upper boundaries list -> [np.array, ..., np.array]
+        lb: lower boundary list -> [np.array, ..., np.array]
+        pop: population size -> int
+        dims: num. parameters list -> [int, ..., int]
+
+        :return
+        X: the updated samples
+        """
+        for i in range(pop):
+            for j in range(dim):
+                if X[i, j] > ub[j]:
+                    X[i, j] = ub[j]
+                elif X[i, j] < lb[j]:
+                    X[i, j] = lb[j]
+        return X
+
+    def _random(self, X, ub, lb, pop, dim):
+        """
+        Random border check function. If a solution is out of the given boundaries,
+        it will be replaced by a random number in the search space.
+
+        :argument
+        X: samples -> np.array, shape = (pop, dim)
+        ub: upper boundaries list -> [np.array, ..., np.array]
+        lb: lower boundary list -> [np.array, ..., np.array]
+        pop: population size -> int
+        dims: num. parameters list -> [int, ..., int]
+
+        :return
+        X: the updated samples
+        """
+        for i in range(pop):
+            for j in range(dim):
+                if X[i, j] > ub[j] or X[i, j] < lb[j]:
+                    X[i, j] = lb[j] + random.random() * (ub[j] - lb[j])
+        return X
+
+    def _rebound(self, X, ub, lb, pop, dim):
+        """
+        Rebound border check function. If a solution is out of the given boundaries,
+        it will be replaced by a random number (with an uniform distribution) near the boundary.
+
+        :argument
+        X: samples -> np.array, shape = (pop, dim)
+        ub: upper boundaries list -> [np.array, ..., np.array]
+        lb: lower boundary list -> [np.array, ..., np.array]
+        pop: population size -> int
+        dims: num. parameters list -> [int, ..., int]
+
+        :return
+        X: the updated samples
+        """
+
+        for i in range(pop):
+            for j in range(dim):
+                if X[i, j] > ub[j]:
+                    X[i, j] = lb[j] + random.uniform(0.95, 1.00) * (ub[j] - lb[j])
+                elif X[i, j] < lb[j]:
+                    X[i, j] = lb[j] + random.uniform(0, 0.05) * (ub[j] - lb[j])
+        return X
 
 
 def CalculateFitness(X, fun,n_obj, args):

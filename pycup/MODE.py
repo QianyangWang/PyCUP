@@ -8,11 +8,12 @@ import math
 from . import progress_bar
 from random import choices
 from . import Reslib
-from .calc_utils import BorderCheck,CalculateFitness,CalculateFitnessMP
+from .calc_utils import BorderChecker,CalculateFitness,CalculateFitnessMP
 
 Sampling = "LHS"
 F = 0.2
 Cr = 0.9
+BorderCheckMethod = "rebound"
 
 
 def initial(pop, dim, ub, lb):
@@ -73,6 +74,7 @@ def getNonDominationPops(X, fitness,res):
 
 
 def mutate(X, F, lb, ub):
+    checker = BorderChecker(method=BorderCheckMethod)
     pop, dim = X.shape
     mutantX = np.zeros((pop, dim))
     indices = np.arange(pop).tolist()
@@ -80,7 +82,7 @@ def mutate(X, F, lb, ub):
         rs = random.sample(indices, 3)
         mutantX[i] = X[rs[0]] + F * (X[rs[1]] - X[rs[2]])
     # Bordercheck
-    mutantX = BorderCheck(mutantX,ub,lb,pop,dim)
+    mutantX = checker.BorderCheck(mutantX,ub,lb,pop,dim)
     return mutantX
 
 
@@ -239,6 +241,7 @@ def run(pop,dim,lb,ub,MaxIter,n_obj,fun,RecordPath = None,args=()):
     print("Lower Bnd.:{}".format(lb))
     print("Upper Bnd.:{}".format(ub))
     Progress_Bar = progress_bar.ProgressBar(MaxIter + 1)
+    checker = BorderChecker(method=BorderCheckMethod)
     if not RecordPath:
         iter = 0
         hs = []
@@ -277,7 +280,7 @@ def run(pop,dim,lb,ub,MaxIter,n_obj,fun,RecordPath = None,args=()):
 
         mutantX = mutate(X, F, lb, ub)
         trialX = crossover(X, mutantX, Cr)
-        trialX = BorderCheck(trialX, ub, lb, pop, dim)
+        trialX = checker.BorderCheck(trialX, ub, lb, pop, dim)
         trialFits,trialRes = CalculateFitness(trialX, fun,n_obj=n_obj,args=args)
         M_pops = np.concatenate((X, trialX), axis=0)
         M_fits = np.concatenate((fitness, trialFits), axis=0)
@@ -346,6 +349,7 @@ def runMP(pop,dim,lb,ub,MaxIter,n_obj,fun,n_jobs,RecordPath = None,args=()):
     print("Lower Bnd.:{}".format(lb))
     print("Upper Bnd.:{}".format(ub))
     Progress_Bar = progress_bar.ProgressBar(MaxIter + 1)
+    checker = BorderChecker(method=BorderCheckMethod)
     if not RecordPath:
         iter = 0
         hs = []
@@ -384,7 +388,7 @@ def runMP(pop,dim,lb,ub,MaxIter,n_obj,fun,n_jobs,RecordPath = None,args=()):
 
         mutantX = mutate(X, F, lb, ub)
         trialX = crossover(X, mutantX, Cr)
-        trialX = BorderCheck(trialX, ub, lb, pop, dim)
+        trialX = checker.BorderCheck(trialX, ub, lb, pop, dim)
         trialFits,trialRes = CalculateFitnessMP(trialX, fun,n_obj=n_obj,n_jobs=n_jobs,args=args)
         M_pops = np.concatenate((X, trialX), axis=0)
         M_fits = np.concatenate((fitness, trialFits), axis=0)

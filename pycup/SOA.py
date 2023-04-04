@@ -7,13 +7,15 @@ from . import multi_jobs
 import math
 from . import progress_bar
 from . import Reslib
-from .calc_utils import BorderCheck,SortFitness,SortPosition,check_listitem,record_check,record_checkMV
+from .calc_utils import BorderChecker,SortFitness,SortPosition,check_listitem,record_check,record_checkMV
 from .calc_utils import CalculateFitness,CalculateFitnessMP,CalculateFitness_MV,CalculateFitnessMP_MV
 
 EliteOppoSwitch = True # Switch for elite opposition based learning
 OppoFactor = 0.1 # proportion of samples to do the elite opposition operation
 FC = 2 # SOA parameter, users can modify it
 Sampling = "LHS"
+BorderCheckMethod = "rebound"
+
 
 def initial(pop, dim, ub, lb):
     """
@@ -111,6 +113,7 @@ def run(pop,dim,lb,ub,MaxIter,fun,fc=None,RecordPath = None,args=()):
     print("Lower Bnd.:{}".format(lb))
     print("Upper Bnd.:{}".format(ub))
     Progress_Bar = progress_bar.ProgressBar(MaxIter + 1)
+    checker = BorderChecker(method=BorderCheckMethod)
     if not fc:
         fc = FC
     # fc is changeable
@@ -188,7 +191,7 @@ def run(pop,dim,lb,ub,MaxIter,fun,fc=None,RecordPath = None,args=()):
 
             X_new[j, :] = x * y * z * DS[j, :] + Pbest
 
-        X_new = BorderCheck(X_new, ub, lb, pop, dim)
+        X_new = checker.BorderCheck(X_new, ub, lb, pop, dim)
         fitness, res = CalculateFitness(X_new, fun,1,args)
         fitness, sortIndex = SortFitness(fitness)
         X = SortPosition(X_new, sortIndex)
@@ -209,7 +212,7 @@ def run(pop,dim,lb,ub,MaxIter,fun,fc=None,RecordPath = None,args=()):
                 Tub = np.max(XElite, 0)
 
                 XOppo = np.array([random.random() * (Tlb + Tub) - XElite[j, :] for j in range(EliteNumber)])
-                XOppo = BorderCheck(XOppo, ub, lb, EliteNumber, dim)
+                XOppo = checker.BorderCheck(XOppo, ub, lb, EliteNumber, dim)
                 fitOppo, resOppo = CalculateFitness(XOppo, fun,1,args)
                 for j in range(EliteNumber):
                     if fitOppo[j] < fitness[j]:
@@ -294,6 +297,7 @@ def runMP(pop, dim, lb, ub, MaxIter,  fun, n_jobs,fc=None,RecordPath = None,args
     print("Lower Bnd.:{}".format(lb))
     print("Upper Bnd.:{}".format(ub))
     Progress_Bar = progress_bar.ProgressBar(MaxIter + 1)
+    checker = BorderChecker(method=BorderCheckMethod)
     if not fc:
         fc = FC
     # fc is changeable
@@ -370,7 +374,7 @@ def runMP(pop, dim, lb, ub, MaxIter,  fun, n_jobs,fc=None,RecordPath = None,args
             X_new[j, :] = x * y * z * DS[j, :] + Pbest
 
 
-        X_new = BorderCheck(X_new, ub, lb, pop, dim)
+        X_new = checker.BorderCheck(X_new, ub, lb, pop, dim)
         fitness, res = CalculateFitnessMP(X_new, fun,1,n_jobs, args)
         fitness, sortIndex = SortFitness(fitness)
         X = SortPosition(X_new, sortIndex)
@@ -391,7 +395,7 @@ def runMP(pop, dim, lb, ub, MaxIter,  fun, n_jobs,fc=None,RecordPath = None,args
                 Tub = np.max(XElite, 0)
 
                 XOppo = np.array([random.random() * (Tlb + Tub) - XElite[j, :] for j in range(EliteNumber)])
-                XOppo = BorderCheck(XOppo, ub, lb, EliteNumber, dim)
+                XOppo = checker.BorderCheck(XOppo, ub, lb, EliteNumber, dim)
                 fitOppo, resOppo = CalculateFitnessMP(XOppo, fun,1,n_jobs, args)
                 for j in range(EliteNumber):
                     if fitOppo[j] < fitness[j]:
@@ -465,6 +469,7 @@ def run_MV(pop,dims,lbs,ubs,MaxIter,fun,fc=None,RecordPath = None,args=()):
     print("Lower Bnd.:{}".format(lbs))
     print("Upper Bnd.:{}".format(ubs))
     Progress_Bar = progress_bar.ProgressBar(MaxIter + 1)
+    checker = BorderChecker(method=BorderCheckMethod)
     if not fc:
         fc = FC
     # fc is changeable
@@ -546,7 +551,7 @@ def run_MV(pop,dims,lbs,ubs,MaxIter,fun,fc=None,RecordPath = None,args=()):
 
 
         for n in range(num_var):
-            X_new[n] = BorderCheck(X_new[n], ubs[n], lbs[n], pop, dims[n])
+            X_new[n] = checker.BorderCheck(X_new[n], ubs[n], lbs[n], pop, dims[n])
         fitness, res = CalculateFitness_MV(X_new, fun,args)
         for n in range(num_var):
             fitness[n], sortIndex = SortFitness(fitness[n])
@@ -569,7 +574,7 @@ def run_MV(pop,dims,lbs,ubs,MaxIter,fun,fc=None,RecordPath = None,args=()):
 
                 XOppo = [np.array([random.random() * (Tlb[n] + Tub[n]) - XElite[n][j, :] for j in range(EliteNumber)]) for n in range(num_var)]
                 for n in range(num_var):
-                    XOppo[n] = BorderCheck(XOppo[n], ubs[n], lbs[n], EliteNumber, dims[n])
+                    XOppo[n] = checker.BorderCheck(XOppo[n], ubs[n], lbs[n], EliteNumber, dims[n])
                 fitOppo, resOppo = CalculateFitness_MV(XOppo, fun, args)
                 for j in range(EliteNumber):
                     for n in range(num_var):
@@ -655,6 +660,7 @@ def runMP_MV(pop,dims,lbs,ubs,MaxIter,fun, n_jobs,fc=None,RecordPath = None,args
     print("Lower Bnd.:{}".format(lbs))
     print("Upper Bnd.:{}".format(ubs))
     Progress_Bar = progress_bar.ProgressBar(MaxIter + 1)
+    checker = BorderChecker(method=BorderCheckMethod)
     if not fc:
         fc = FC
     # fc is changeable
@@ -736,7 +742,7 @@ def runMP_MV(pop,dims,lbs,ubs,MaxIter,fun, n_jobs,fc=None,RecordPath = None,args
 
 
         for n in range(num_var):
-            X_new[n] = BorderCheck(X_new[n], ubs[n], lbs[n], pop, dims[n])
+            X_new[n] = checker.BorderCheck(X_new[n], ubs[n], lbs[n], pop, dims[n])
         fitness, res = CalculateFitnessMP_MV(X_new, fun,n_jobs,args)
         for n in range(num_var):
             fitness[n], sortIndex = SortFitness(fitness[n])
@@ -759,7 +765,7 @@ def runMP_MV(pop,dims,lbs,ubs,MaxIter,fun, n_jobs,fc=None,RecordPath = None,args
 
                 XOppo = [np.array([random.random() * (Tlb[n] + Tub[n]) - XElite[n][j, :] for j in range(EliteNumber)]) for n in range(num_var)]
                 for n in range(num_var):
-                    XOppo[n] = BorderCheck(XOppo[n], ubs[n], lbs[n], EliteNumber, dims[n])
+                    XOppo[n] = checker.BorderCheck(XOppo[n], ubs[n], lbs[n], EliteNumber, dims[n])
                 fitOppo, resOppo = CalculateFitnessMP_MV(XOppo, fun,n_jobs, args)
                 for j in range(EliteNumber):
                     for n in range(num_var):

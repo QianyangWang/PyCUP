@@ -7,13 +7,14 @@ from . import multi_jobs
 import math
 from . import progress_bar
 from . import Reslib
-from .calc_utils import CalculateFitness,CalculateFitnessMP,BorderCheck
+from .calc_utils import CalculateFitness,CalculateFitnessMP,BorderChecker
 
 Sampling = "LHS"
 pc = 0.6
 pm = 0.1
 etaC = 1
 etaM = 1
+BorderCheckMethod = "rebound"
 
 
 def initial(pop, dim, ub, lb):
@@ -39,12 +40,13 @@ def initial(pop, dim, ub, lb):
 
 
 def mutate(X, pm, etaM, lb, ub):
+    checker = BorderChecker(method=BorderCheckMethod)
     nPop = X.shape[0]
     dim = X.shape[1]
     for i in range(nPop):
         if np.random.rand() < pm:
             polyMutation(X[i], etaM)
-    X = BorderCheck(X,ub=ub,lb=lb,pop = nPop,dim=dim)
+    X = checker.BorderCheck(X,ub=ub,lb=lb,pop = nPop,dim=dim)
     return X
 
 def polyMutation(chr, etaM):
@@ -161,14 +163,14 @@ def compare(idx1, idx2, ranks, distances):
     return idx
 
 def crossover(X, pc, etaC, lb, ub):
-
+    checker = BorderChecker(method=BorderCheckMethod)
     chrX = X.copy()
     pop = chrX.shape[0]
     dim = chrX.shape[1]
     for i in range(0, pop, 2):
         if np.random.rand() < pc:
             SBX(chrX[i], chrX[i+1], etaC)
-    chrX = BorderCheck(chrX,ub=ub,lb=lb,pop=pop,dim=dim)
+    chrX = checker.BorderCheck(chrX,ub=ub,lb=lb,pop=pop,dim=dim)
     return chrX
 
 

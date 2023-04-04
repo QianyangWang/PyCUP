@@ -8,12 +8,13 @@ import math
 from collections import Counter
 from . import progress_bar
 from . import Reslib
-from .calc_utils import CalculateFitness,CalculateFitnessMP,BorderCheck
+from .calc_utils import CalculateFitness,CalculateFitnessMP,BorderChecker
 
 VFactor = 0.3 # velocity factor, users can modify this to control the velocity ranges. Default 0.1 * parameter ranges
 EliteOppoSwitch = True # Switch for elite opposition based learning
 OppoFactor = 0.1 # proportion of samples to do the elite opposition operation
 Sampling = "LHS"
+BorderCheckMethod = "rebound"
 
 w = 0.9 # inertia factor
 c1 = 2  # constant 1
@@ -313,6 +314,7 @@ def run(pop,dim,lb,ub,MaxIter,n_obj,nAr,M,fun,Vmin=None,Vmax=None,RecordPath = N
     print("Lower Bnd.:{}".format(lb))
     print("Upper Bnd.:{}".format(ub))
     Progress_Bar = progress_bar.ProgressBar(MaxIter + 1)
+    checker = BorderChecker(method=BorderCheckMethod)
     if not Vmin or not Vmax:
         Vmin = -VFactor * (ub-lb)
         Vmax = VFactor * (ub-lb)
@@ -383,7 +385,7 @@ def run(pop,dim,lb,ub,MaxIter,n_obj,nAr,M,fun,Vmin=None,Vmax=None,RecordPath = N
 
             X[j, :] = X[j, :] + V[j, :]
 
-        X = BorderCheck(X, ub, lb, pop, dim)
+        X = checker.BorderCheck(X, ub, lb, pop, dim)
         fitness, res = CalculateFitness(X, fun,n_obj, args)
         Pbest, fitnessPbest = updatePBest(Pbest, fitnessPbest, X, fitness)
         archive, arFits,arRes = updateArchive(X, fitness,res, archive, arFits,arRes)
@@ -401,7 +403,7 @@ def run(pop,dim,lb,ub,MaxIter,n_obj,nAr,M,fun,Vmin=None,Vmax=None,RecordPath = N
                 Tlb = np.min(XElite, 0)
                 Tub = np.max(XElite, 0)
                 XOppo = np.array([random.random() * (Tlb + Tub) - XElite[j, :] for j in range(EliteNumber)])
-                XOppo = BorderCheck(XOppo, ub, lb, EliteNumber, dim)
+                XOppo = checker.BorderCheck(XOppo, ub, lb, EliteNumber, dim)
                 fitOppo, resOppo = CalculateFitness(XOppo, fun,n_obj, args)
                 for i in range(len(EliteIdx)):
                     notsameflag = np.sum(np.sum(XOppo[i] == archive, axis=1) == XOppo.shape[1])
@@ -476,6 +478,7 @@ def runMP(pop, dim, lb, ub, MaxIter,  n_obj, nAr, M,fun,n_jobs, Vmin=None, Vmax=
     print("Lower Bnd.:{}".format(lb))
     print("Upper Bnd.:{}".format(ub))
     Progress_Bar = progress_bar.ProgressBar(MaxIter + 1)
+    checker = BorderChecker(method=BorderCheckMethod)
     if not Vmin or not Vmax:
         Vmin = -VFactor * (ub - lb)
         Vmax = VFactor * (ub - lb)
@@ -546,7 +549,7 @@ def runMP(pop, dim, lb, ub, MaxIter,  n_obj, nAr, M,fun,n_jobs, Vmin=None, Vmax=
 
             X[j, :] = X[j, :] + V[j, :]
 
-        X = BorderCheck(X, ub, lb, pop, dim)
+        X = checker.BorderCheck(X, ub, lb, pop, dim)
         fitness, res = CalculateFitnessMP(X, fun, n_obj,n_jobs, args)
         Pbest, fitnessPbest = updatePBest(Pbest, fitnessPbest, X, fitness)
         archive, arFits, arRes = updateArchive(X, fitness, res, archive, arFits, arRes)
@@ -564,7 +567,7 @@ def runMP(pop, dim, lb, ub, MaxIter,  n_obj, nAr, M,fun,n_jobs, Vmin=None, Vmax=
                 Tlb = np.min(XElite, 0)
                 Tub = np.max(XElite, 0)
                 XOppo = np.array([random.random() * (Tlb + Tub) - XElite[j, :] for j in range(EliteNumber)])
-                XOppo = BorderCheck(XOppo, ub, lb, EliteNumber, dim)
+                XOppo = checker.BorderCheck(XOppo, ub, lb, EliteNumber, dim)
                 fitOppo, resOppo = CalculateFitnessMP(XOppo, fun,n_obj,n_jobs, args)
                 for i in range(len(EliteIdx)):
                     notsameflag = np.sum(np.sum(XOppo[i] == archive, axis=1) == XOppo.shape[1])
