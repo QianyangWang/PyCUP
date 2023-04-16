@@ -1,16 +1,12 @@
 # PyCUP
 
-<img src="https://img.shields.io/badge/Version-0.1.5-brightgreen" /><img src="https://img.shields.io/badge/Language-Python-blue" />	
+<img src="https://img.shields.io/badge/Version-0.1.6-brightgreen" /><img src="https://img.shields.io/badge/Language-Python-blue" />	
 
 This is an open-source package designed for (environmental) model calibration and uncertainty analysis. The current version is the very first version, we welcome all comments, suggestions, and improvements.
 
-## v 0.1.5 Update
+## v 0.1.6 Update
 
-Two new border check mechanisms are included for processing the generated parameters that exceed the user defined search boundaries during the heuristic algorithms' updating stage.
-
-1. (The original method) Absorb. The sample value exceeds the lower boundary/ upper boundary will be directly put on the corresponding boundary.
-2. Random. The sample value exceeds the lower boundary/ upper boundary will be given a random value according to the search space.
-3. (The currently default method) Rebound. The sample value exceeds the lower boundary/ upper boundary will be given a random value near the corresponding boundary. This method can keep the search direction and avoid the result that a lot of samples locate on the boundary.
+PyCUP now supports a basic integration with PEST++ calibration project for a more convenient model-agnostic calibration process. The pycup.integrate.PESTconvertor can generate an objective function, which can read/write the parameter file, run the commandline, read the simulation results with the PEST++ instruction files. The function can be used by PyCUP algorithms so that users can do the calibration without writting the objective function and IO functions by themselves. As the PyCUP algorithms have mechanisms differ from which used by PEST++, some settings in PEST++ control file will be ignored. More details can be found in the example in documentations in the repository.
 
 ## What does it have
 
@@ -20,6 +16,7 @@ Two new border check mechanisms are included for processing the generated parame
 2. Multi-objective heuristic algorithms including MOPSO, MODE, and NSGA-II.
 3. Elite opposition strategy modified heuristic algorithms -- with better optimum search abilities.
 4. Statistic based-method LHS-GLUE.
+5. Three kinds of algorithm border check mechanisms including Absorb, Random, and Rebound, designed for different problems.
 
 ### (2) For sensitivity & uncertainty analysis
 
@@ -33,7 +30,11 @@ Two new border check mechanisms are included for processing the generated parame
 2. Recording and resuming during the calibration task.
 3. Several result plotting functions.
 4. A special simulation result object  for multi-station & multi-event results (of environmental models) in pycup.ResLib.
-5. PyCUP can be linked to spotpy database for post-processing, a pycup objective function can also be generated from the spotpy objective function using the module named pycup.integrate.
+
+### (4) Package/Tools integration
+
+1. PyCUP can be linked to spotpy database for post-processing, a pycup objective function can also be generated from the spotpy objective function using the module named pycup.integrate.
+2. The required objective function for pycup calibration can be easily generated using a PEST++ optimization project with/without a tsproc.exe. The PESTconvertor object in pycup.integrate provides several APIs for reading PEST++ files such as .pst, .ins, and .tpl.
 
 ## How to install
 
@@ -78,5 +79,6 @@ cp.SSA.run(pop = 1000, dim = 30, lb = lb, ub = ub, MaxIter = 30, fun = uni_fun1)
 <div align=center>
 <img src="https://user-images.githubusercontent.com/116932670/209893309-e67c425f-0eff-47b4-a552-b30d717a138b.png">
 </div>
+## Example PEST++ conversion project (with a Xinanjiang hydrologic model)
 
-
+1. The example in folder 'Example06-PESTintegration' contains a PEST++ Xinanjiang model calibration project and the python script to run a PyCUP calibration based on it.

@@ -1,0 +1,7 @@
+gp1 relative 0.01 0.0 switch 1.5 parabolic
+gp2 relative 0.01 0.0 switch 1.5 parabolic
+gp3 relative 0.01 0.0 switch 1.5 parabolic
+gp4 relative 0.01 0.0 switch 1.5 parabolic
+gp5 relative 0.01 0.0 switch 1.5 parabolic
+gp6 relative 0.01 0.0 switch 1.5 parabolic
+gp7 relative 0.01 0.0 switch 1.5 parabolic

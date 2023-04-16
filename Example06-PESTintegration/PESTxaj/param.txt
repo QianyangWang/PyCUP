@@ -1,0 +1,7 @@
+K          none relative   0.93	 0.8    1.0	    gp1   1.0    0.0
+UM      none relative    20	 10     50	    gp2   1.0    0.0  
+SM      none relative    30	 1     50	    gp3   1.0    0.0  
+KI         none relative    0.5	0.1   0.6	    gp4   1.0    0.0
+CI         none relative    0.76	0.1   0.9	    gp5   1.0    0.0
+CG       none relative    0.98	0.95  0.998   gp6   1.0    0.0
+CR        none relative    0.21       0.1   0.9     gp7   1.0    0.0 

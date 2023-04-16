@@ -1,0 +1,98 @@
+
+Sun Apr 16 2023 22:22: processing information contained in TSPROC input file tsproc.dat....
+
+ Processing SETTINGS block....
+    context pest_input
+    DATE_FORMAT mm/dd/yyyy
+    Processing of SETTINGS block complete.
+
+ Processing GET_MUL_SERIES_SSF block....
+    context all
+    FILE Q.ssf
+    SITE estimate
+    NEW_SERIES_NAME mod_est
+    DATE_1 01/01/1989
+    TIME_1 00:00:00
+    DATE_2 12/31/1994
+    TIME_2 00:00:00
+    Reading site sample file Q.ssf....
+    Series "mod_est" successfully imported from file Q.ssf
+
+ Processing GET_MUL_SERIES_SSF block....
+    context test
+    Requested actions not undertaken because no CONTEXT option in the
+     block coincides with the current run context.
+
+ Processing GET_MUL_SERIES_SSF block....
+    context all
+    FILE observedflow.ssf
+    SITE estimate
+    NEW_SERIES_NAME mea_est
+    DATE_1 01/01/1989
+    TIME_1 00:00:00
+    DATE_2 12/31/1994
+    TIME_2 00:00:00
+    Reading site sample file observedflow.ssf....
+    Series "mea_est" successfully imported from file observedflow.ssf
+
+ Processing GET_MUL_SERIES_SSF block....
+    context test
+    Requested actions not undertaken because no CONTEXT option in the
+     block coincides with the current run context.
+
+ Processing NEW_TIME_BASE block....
+    context all
+    SERIES_NAME mod_est
+    TB_SERIES_NAME mea_est
+    NEW_SERIES_NAME i_mod_est
+    New series "i_mod_est" successfully calculated.
+
+ Processing NEW_TIME_BASE block....
+    context test
+    Requested actions not undertaken because no CONTEXT option in the
+     block coincides with the current run context.
+
+ Processing SERIES_COMPARE block....
+    context test
+    Requested actions not undertaken because no CONTEXT option in the
+     block coincides with the current run context.
+
+ Processing LIST_OUTPUT block....
+    context test
+    Requested actions not undertaken because no CONTEXT option in the
+     block coincides with the current run context.
+
+ Processing LIST_OUTPUT block....
+    context all
+    FILE xaj.out
+    SERIES_NAME i_mod_est
+    SERIES_FORMAT short
+    Writing output file xaj.out....
+    File xaj.out written ok.
+
+ Processing WRITE_PEST_FILES block....
+    context pest_input
+    NEW_PEST_CONTROL_FILE xaj.pst
+    TEMPLATE_FILE parameter.tpl
+    MODEL_INPUT_FILE parameter.txt
+    NEW_INSTRUCTION_FILE xaj.ins
+    AUTOMATIC_USER_INTERVENTION yes
+    OBSERVATION_SERIES_NAME mea_est
+    MODEL_SERIES_NAME i_mod_est
+    SERIES_WEIGHTS_EQUATION "1"
+    SERIES_WEIGHTS_MIN_MAX 0.0000000   100.00000
+    PARAMETER_DATA_FILE param.txt
+    PARAMETER_GROUP_FILE group.txt
+    MODEL_COMMAND_LINE batch.bat
+    Reading parameter group file group.txt ....
+    - data for 7 parameter groups read from file group.txt
+    Reading parameter data file param.txt ....
+    - data for 7 parameters read from file param.txt
+    Reading template file parameter.tpl ....
+    - 7 parameter names read from file parameter.tpl
+    Writing instruction file xaj.ins ....
+    - file xaj.ins written ok.
+    Writing PEST control file xaj.pst ....
+    - file xaj.pst written ok.
+
+ - no more blocks to process.

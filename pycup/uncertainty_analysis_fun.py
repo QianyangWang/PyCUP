@@ -94,7 +94,10 @@ def likelihood_uncertainty(raw_saver, threshold, ppu):
         raise TypeError("The given saver object is not a save.RawDataSaver.")
 
     if raw_saver.opt_type == "GLUE":
-        hr = raw_saver.historical_results
+        if Reslib.UseResObject:
+            hr = raw_saver.historical_results.data
+        else:
+            hr = raw_saver.historical_results
         hf = raw_saver.historical_fitness
         hs = raw_saver.historical_samples
 
@@ -283,7 +286,10 @@ def likelihood_uncertaintyMO(raw_saver, n_obj, thresholds, ppu, obj_weights):
         raise TypeError("The length of objective function weights should be equal to n_obj.")
 
     if raw_saver.opt_type == "GLUE":
-        hr = raw_saver.historical_results
+        if Reslib.UseResObject:
+            hr = raw_saver.historical_results.data
+        else:
+            hr = raw_saver.historical_results
         hf = raw_saver.historical_fitness
         hs = raw_saver.historical_samples
 
@@ -477,7 +483,10 @@ def frequency_uncertainty(raw_saver, threshold, ppu, intervals=10, approximation
     if not (isinstance(raw_saver, save.RawDataSaver)):
         raise TypeError("The given saver object is not a save.RawDataSaver.")
     if raw_saver.opt_type == "GLUE":
-        hr = raw_saver.historical_results
+        if Reslib.UseResObject:
+            hr = raw_saver.historical_results.data
+        else:
+            hr = raw_saver.historical_results
         hf = raw_saver.historical_fitness
         hs = raw_saver.historical_samples
 
@@ -662,7 +671,10 @@ def frequency_uncertaintyMO(raw_saver, n_obj, thresholds, ppu, intervals=10, app
         raise TypeError("The given saver object is not a save.RawDataSaver.")
 
     if raw_saver.opt_type == "GLUE":
-        hr = raw_saver.historical_results
+        if Reslib.UseResObject:
+            hr = raw_saver.historical_results.data
+        else:
+            hr = raw_saver.historical_results
         hf = raw_saver.historical_fitness
         hs = raw_saver.historical_samples
 
@@ -1165,7 +1177,6 @@ def prediction_frequency_uncertainty(pred_raw_saver, ppu, intervals=10, approxim
 
         median_prediction = get_median_series(results)
     else:
-        results = pred_raw_saver.results.data
         results = pred_raw_saver.results.data
         stations = list(results[0].keys())
         ppu_line_lower = Reslib.SimulationResult()

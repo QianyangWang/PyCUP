@@ -6,6 +6,7 @@ pycup/MFO.py
 pycup/MODE.py
 pycup/MOPSO.py
 pycup/NSGA2.py
+pycup/PESTclasses.py
 pycup/PSO.py
 pycup/Reslib.py
 pycup/SCA.py
