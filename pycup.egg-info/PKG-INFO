@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: pycup
-Version: 0.1.6
+Version: 0.1.6.1
 Summary: An auto-calibration tool for environmental models based on heuristic algorithms and uncertainty estimation theory.
 Home-page: https://github.com/QianyangWang/PyCUP
 Author: Qianyang Wang
@@ -89,6 +89,7 @@ Description: # PyCUP
         <div align=center>
         <img src="https://user-images.githubusercontent.com/116932670/209893309-e67c425f-0eff-47b4-a552-b30d717a138b.png">
         </div>
+        
         ## Example PEST++ conversion project (with a Xinanjiang hydrologic model)
         
         1. The example in folder 'Example06-PESTintegration' contains a PEST++ Xinanjiang model calibration project and the python script to run a PyCUP calibration based on it.

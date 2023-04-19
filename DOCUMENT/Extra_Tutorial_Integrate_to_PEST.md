@@ -147,11 +147,11 @@ As the PyCUP and PEST++ use different algorithms/methods for model calibration, 
 
 ### Differences
 
-1. Parameter definition: The parameter group settings for example, INCTYP, DERINC, DERINCLB, and FORCEN are not well implemented as a result of the difference calibration method. Algorithms in PyCUP do not need to calculate the derivative. When an INCTYP of "absolute"  is set, the parameter values written in parameter files will be adjusted to the integral multiple of the DERINC. This can be used by the PyCUP algorithm when the fixed increment is needed. However, the algorithm generated sample values stored in the RawDataSaver object will still be the original value.
+1. **Parameter definition**: The **parameter group settings** for example, INCTYP, DERINC, DERINCLB, and FORCEN are not well implemented as a result of the difference calibration method. Algorithms in PyCUP do not need to calculate the derivative. When an INCTYP of "absolute"  is set, the parameter values written in parameter files will be adjusted to the integral multiple of the DERINC. This can be used by the PyCUP algorithm when the fixed increment is needed. However, the algorithm generated sample values stored in the RawDataSaver object will still be the original value. The log-transformation of the parameter is currently not support, as the algorithms in PyCUP do not rely on the calculation of derivatives.
 
-2. PEST control file: external parameter data and external parameter group data in currently not implemented, this function will be updated in the near future. The lines start with "++" marker will not be read by the program.
+2. **PEST control file**: external parameter data and external parameter group data in currently not implemented, this function will be updated in the near future. The lines start with "++" marker will not be read by the program.
 
-3. Evaluation metric/Objective function: PyCUP supports the user defined evaluation metric in the objective function. In this situation, the weights of the observation data are still partially supported. For a user defined objective function, there are three kinds of acceptable observation weight series:
+3. **Evaluation metric/Objective function**: PyCUP supports the user defined evaluation metric in the objective function. In this situation, the weights of the observation data are still partially supported. For a user defined objective function, there are three kinds of acceptable observation weight series:
 
    <1> Weighted average: The weight remains constant in a observation data series, while different observation series can have different weights. In this case, the weighted averaged evaluation metric will be calculated, for example (a weighted averaged  RMSE can be calculated using 0.3 * RMSEseries1 + 0.7 *RMSEseries2). 
 
@@ -159,4 +159,4 @@ As the PyCUP and PEST++ use different algorithms/methods for model calibration, 
 
    <3>Weighted average with drop out values: When the weights of a series are only 0 and a unique value other than 0, the data with a weight of 0 will be treated as the dropped out data and will not be included in the calculation of the final evaluation metric, while the unique non-zero weights of different series will be used to calculate a weighted average metric.
 
-4. Algorithms: the algorithms in PyCUP are mainly heuristic algorithms without complex prior information, therefore, the prior information section in PEST++ control file will not be implemented. The aim of the development of this conversion module is to use the PEST++ IO framework for a more convenient and model-agnostic calibration process. 
+4. **Algorithms**: the algorithms in PyCUP are mainly heuristic algorithms without complex prior information, therefore, the prior information section in PEST++ control file will not be implemented. The aim of the development of this conversion module is to use the PEST++ IO framework for a more convenient and model-agnostic calibration process. 

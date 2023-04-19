@@ -419,7 +419,7 @@ class PESTinsReader:
         if re.match("l[0-9]+",verb):
             return PESTLineAdvance(verb)
         elif re.match("{}.*?{}".format(self.dlmt,self.dlmt),verb):
-            return PESTDelimiter(verb)
+            return PESTDelimiter(verb,self.dlmt)
         elif verb == "w":
             return PESTwhitespace(verb)
         elif re.match("!.*?!",verb):
@@ -532,9 +532,9 @@ class PESTFixedData(PESTinscmd):
 
 class PESTDelimiter(PESTinscmd):
 
-    def __init__(self,verb):
+    def __init__(self,verb,dlmt):
         super().__init__(verb)
-        self.keyword = re.findall("~(.*?)~",verb)
+        self.keyword = re.findall("{}(.*?){}".format(dlmt,dlmt),verb)
 
     def update_cursor(self,**kwargs):
         rowcursor, linecursor,contents = kwargs["rowcursor"], kwargs["linecursor"],kwargs["contents"]
@@ -616,7 +616,9 @@ class PESTresultReader:
 
 
 
-
+if __name__ == "__main__":
+    ins = PESTinsReader(r"D:\PESTEXAMPLES\pestpp_v5_data_release_barf\mf6_freyberg\freyberg6.lst.ins")
+    print(ins.cmd_obj)
 
 
 

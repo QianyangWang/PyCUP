@@ -575,9 +575,13 @@ class PESTconvertor:
         dst_folder = self.workspace+"\\pycup_process{}".format(pid)
         os.mkdir(dst_folder)
         for f in dirs:
-            if os.path.basename(f) != "pestpp.exe"  and os.path.basename(f) != "tsproc.exe" and "pycup_process" not in f:
-                shutil.copy(self.workspace +"\\"+ f,dst_folder+"\\"+os.path.basename(f))
-
+            if "pycup_process" not in f:
+                abs_path = self.workspace +"\\"+ f
+                if os.path.isfile(abs_path):
+                    if os.path.basename(f) != "pestpp.exe"  and os.path.basename(f) != "tsproc.exe":
+                        shutil.copy(abs_path,dst_folder+"\\"+os.path.basename(f))
+                else:
+                    shutil.copytree(abs_path,dst_folder+"\\"+ f)
         os.chdir(dst_folder)
         self.UpdateParam(X,subfolder="pycup_process{}".format(pid))
         self.CallExe(subfolder="pycup_process{}".format(pid))
@@ -594,8 +598,13 @@ class PESTconvertor:
         if not os.path.exists(dst_folder):
             os.mkdir(dst_folder)
             for f in dirs:
-                if os.path.basename(f) != "pestpp.exe"  and os.path.basename(f) != "tsproc.exe" and "pycup_process" not in f:
-                    shutil.copy(self.workspace +"\\"+ f,dst_folder+"\\"+os.path.basename(f))
+                if "pycup_process" not in f:
+                    abs_path = self.workspace + "\\" + f
+                    if os.path.isfile(abs_path):
+                        if os.path.basename(f) != "pestpp.exe" and os.path.basename(f) != "tsproc.exe":
+                            shutil.copy(abs_path, dst_folder + "\\" + os.path.basename(f))
+                    else:
+                        shutil.copytree(abs_path, dst_folder + "\\" + f)
         os.chdir(dst_folder)
         self.UpdateParam(X,subfolder="pycup_process{}".format(pid))
         self.CallExe(subfolder="pycup_process{}".format(pid))
@@ -607,15 +616,16 @@ class PESTconvertor:
 
     def _rm_dirMP(self,pid):
         os.chdir(self.workspace)
+        abs_path = self.workspace + "\\" + "pycup_process{}".format(pid)
         try:
             # remove the folder.
-            shutil.rmtree(self.workspace + "\\" + "pycup_process{}".format(pid))
+            shutil.rmtree(abs_path)
         except:
             # sometimes the exe program has not been finished completely, close the exe and then remove the folder.
-            files = glob.glob(self.workspace + "\\" + "pycup_process{}\\*.exe".format(pid))
+            files = glob.glob(abs_path+"\\**\\*.exe",recursive=True)
             for f in files:
                 p = subprocess.call(["taskkill","/F","/IM",f],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-            shutil.rmtree(self.workspace + "\\" + "pycup_process{}".format(pid))
+            os.system("rd/s/q {}".format(abs_path))
 
     def _closeExeMPF(self,pid):
         files = glob.glob(self.workspace + "\\" + "pycup_process{}\\*.exe".format(pid))
