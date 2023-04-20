@@ -38,10 +38,12 @@ res = pycup.save.RawDataSaver.load(r"RawResult.rst")
 print(res.historical_results["i_mod_est"]["simulation results"])
 print(res.historical_results["i_mod_est"]["observations"])
 ```
-
+<div align=center>
 <img src="img/task.png" alt="image-20230416222916629" style="zoom:80%;" />
-
+</div>
+<div align=center>
 <img src="img/par_info.png" alt="image-20230416182154556" style="zoom:80%;" />
+</div>
 
 ### PESTconvertor.\_\_init\_\_() method
 
@@ -99,8 +101,10 @@ list_result = confun()
 print(list_result[0])
 ```
 
+<div align=center>
 <img src="img/res_table.png" alt="image-20230416182023790" style="zoom:80%;" />
-
+</div>
+            
 In the returned value of this function, the simulation results corresponding to the simulation group will be given separately. The elements in it are pycup.PESTclasses.PESTsimgp objects for storing simulation group results. The features of it include:
 
 1. **PESTsimgp.gpname**: simulation result series name in PEST++
