@@ -1,2 +1,2 @@
-1. Run Calibrate.py to test the example object.
+1. Run Calibrate.py to test the example project.
 2. If you want to switch the mpimode = "dynamic", please move the example project folder out of the environment of the IDE or the PyCUP directory, otherwise the files would be remained taken up, as a result, the generated sub-folder would not be deleted successfully.
