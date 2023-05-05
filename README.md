@@ -66,7 +66,7 @@ cp.SSA.run(pop = 1000, dim = 30, lb = lb, ub = ub, MaxIter = 30, fun = uni_fun1)
 
 ## Example SWMM (Storm Water Management Model) calibration projects
 
-***IMPORTANT: PLEASE OPEN YOUR PYCHARM OR COMMAND LINE WITH THE ADMINISTRATOR RIGHTS BEFORE EXECUTING THE EXAMPLE PROJECT***
+***IMPORTANT: PLEASE OPEN YOUR IDE (e.g. PYCHARM) OR COMMAND LINE WITH THE ADMINISTRATOR RIGHTS BEFORE EXECUTING THE EXAMPLE PROJECT***
 
 #### Location: https://github.com/QianyangWang/PyCUP
 
