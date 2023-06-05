@@ -195,11 +195,7 @@ def run(pop, dim, lb, ub, MaxIter,  fun,RecordPath = None, args=()):
         Xs = Xm[0:Flame_no,:]
         fitnessS = fitnessM[0:Flame_no]
 
-        """
-        Here I used the elite sample to replace the sample in X for saving, because that if 
-        fitOppo[j] < fitnessS[j] (the elite is better than the flame), it is better than any
-        of the sample in X. This will not affect the actual search process.
-        """
+
         X2file = copy.copy(X)
         fitness2file = copy.copy(fitness)
         res2file = copy.copy(res)

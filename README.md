@@ -1,12 +1,12 @@
 # PyCUP
 
-<img src="https://img.shields.io/badge/Version-0.1.6-brightgreen" /><img src="https://img.shields.io/badge/Language-Python-blue" />	
+<img src="https://img.shields.io/badge/Version-0.1.7-brightgreen" /><img src="https://img.shields.io/badge/Language-Python-blue" />	
 
 This is an open-source package designed for (environmental) model calibration and uncertainty analysis. The current version is the very first version, we welcome all comments, suggestions, and improvements.
 
-## v 0.1.6 Update
+## v 0.1.7 Update
 
-PyCUP now supports a basic integration with PEST++ calibration project for a more convenient model-agnostic calibration process. The pycup.integrate.PESTconvertor can generate an objective function, which can read/write the parameter file, run the commandline, read the simulation results with the PEST++ instruction files. The function can be used by PyCUP algorithms so that users can do the calibration without writting the objective function and IO functions by themselves. As the PyCUP algorithms have mechanisms differ from which used by PEST++, some settings in PEST++ control file will be ignored. More details can be found in the example in documentations in the repository.
+A new superior algorithm MOMFO (multi-objective moth-flame optimizer)  based on archive and crowding distance non-domination sort, and its elite-opposition improved version (EO-MOMFO) have been designed and provided in the new version. The elite opposition mechanism was modified based on the concept of non-domination and was embedded for updating the flame population of MOMFO. The implemented MOMFO has a similar principle as the current literature, although with some differences in details, while the elite-opposition version is original in this package.
 
 ## What does it have
 
@@ -34,7 +34,7 @@ PyCUP now supports a basic integration with PEST++ calibration project for a mor
 ### (4) Package/Tools integration
 
 1. PyCUP can be linked to spotpy database for post-processing, a pycup objective function can also be generated from the spotpy objective function using the module named pycup.integrate.
-2. The required objective function for pycup calibration can be easily generated using a PEST++ optimization project with/without a tsproc.exe. The PESTconvertor object in pycup.integrate provides several APIs for reading PEST++ files such as .pst, .ins, and .tpl.
+2. A basic integration with PEST++ IO operations for model-agnostic calibrations. Details and  limitations are provided in the specific documentation. The required objective function for pycup calibration can be easily generated using a PEST++ optimization project with/without a tsproc.exe. The PESTconvertor object in pycup.integrate provides several APIs for reading PEST++ files such as .pst, .ins, and .tpl.
 
 ## How to install
 
