@@ -2168,13 +2168,17 @@ def plot_3d_MO_fitness_space(raw_saver,
     fitness = np.array(raw_saver.historical_fitness)
     iterations, population = analyze_saver(raw_saver)
     if iterations > 1:
-        a = np.ones((fitness.shape[0], fitness.shape[1]))
+        a = []
+        for i in range(iterations):
+            a.append(np.ones(population[i]))
         c = np.linspace(0, iterations, iterations)
         for i in range(fitness.shape[0]):
             a[i] = a[i] * c[i]
+        a = np.concatenate(a)
+        fitness = np.concatenate(fitness)
         fig = plt.figure(figsize=figsize, dpi=dpi)
         ax = fig.add_subplot(111, projection='3d')
-        s = ax.scatter(xs=fitness[:, :, objfunid1], ys=fitness[:, :, objfunid2], zs=fitness[:, :, objfunid3], c=a,
+        s = ax.scatter(xs=fitness[:, objfunid1], ys=fitness[ :, objfunid2], zs=fitness[:, objfunid3], c=a,
                        marker=marker, s=markersize, cmap=cmap)
         bar = plt.colorbar(s, fraction=cbar_frac, pad=cbar_pad)
         bar.set_label(cbar_ttl, fontsize=cbar_ttl_size)
@@ -2187,8 +2191,6 @@ def plot_3d_MO_fitness_space(raw_saver,
                        marker=marker, s=markersize, cmap=cmap)
     ax.view_init(*view_init)
     if slim:
-        if iterations > 1:
-            fitness = np.concatenate(fitness)
         xmin = np.min(fitness[:, objfunid1], axis=0)
         ymin = np.min(fitness[:, objfunid2], axis=0)
         zmin = np.min(fitness[:, objfunid3], axis=0)
@@ -2314,7 +2316,7 @@ def plot_3d_sample_fitness_space(raw_saver,
 
     path = "RawResult.rst"
     saver = save.RawDataSaver.load(path)
-    plot.plot_3d_MO_fitness_space(saver,objfunid1=0,objfunid2=1,variable_id=2)
+    plot.plot_3d_sample_fitness_space(saver,objfunid1=0,objfunid2=1,variable_id=2)
 
 
     Note:
@@ -2344,13 +2346,18 @@ def plot_3d_sample_fitness_space(raw_saver,
     samples = np.array(raw_saver.historical_samples)
     iterations, population = analyze_saver(raw_saver)
     if iterations > 1:
-        a = np.ones((fitness.shape[0], fitness.shape[1]))
+        a = []
+        for i in range(iterations):
+            a.append(np.ones(population[i]))
         c = np.linspace(0, iterations, iterations)
         for i in range(fitness.shape[0]):
             a[i] = a[i] * c[i]
+        a = np.concatenate(a)
+        fitness = np.concatenate(fitness)
+        samples = np.concatenate(samples)
         fig = plt.figure(figsize=figsize, dpi=dpi)
         ax = fig.add_subplot(111, projection='3d')
-        s = ax.scatter(xs=fitness[:, :, objfunid1], ys=fitness[:, :, objfunid2], zs=samples[:, :, variable_id], c=a,
+        s = ax.scatter(xs=fitness[ :, objfunid1], ys=fitness[ :, objfunid2], zs=samples[ :, variable_id], c=a,
                        marker=marker, s=markersize, cmap=cmap)
         bar = plt.colorbar(s, fraction=cbar_frac, pad=cbar_pad)
         bar.set_label(cbar_ttl, fontsize=cbar_ttl_size)
@@ -2363,8 +2370,6 @@ def plot_3d_sample_fitness_space(raw_saver,
                        marker=marker, s=markersize, cmap=cmap)
     ax.view_init(*view_init)
     if slim:
-        if iterations > 1:
-            fitness = np.concatenate(fitness)
         xmin = np.min(fitness[:, objfunid1], axis=0)
         ymin = np.min(fitness[:, objfunid2], axis=0)
         xmax = np.max(fitness[:, objfunid1], axis=0)

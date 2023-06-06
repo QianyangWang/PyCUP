@@ -268,30 +268,6 @@ def checkArchive(archive, arFits,arRes, nAr, M):
         return archive, arFits,arRes
 
 
-
-def initial_MV(pop, dims, ubs, lbs):
-    """
-    lhs sampling based initialization for multi-variable functions
-
-    :argument
-    pop: population size -> int
-    dims: num. parameters list -> [int, ..., int]
-    ub: upper boundaries list -> [np.array, ..., np.array]
-    lb: lower boundary list -> [np.array, ..., np.array]
-
-    :returns
-    Xs: a list of the updated samples/solutions
-    lbs: a list of upper boundaries
-    ubs: a lower boundaries
-    """
-    try:
-        Xs, lbs, ubs = eval("sampling.{}_samplingMV".format(Sampling))(pop=pop, dims=dims, ubs=ubs, lbs=lbs)
-    except:
-        raise KeyError("The selectable sampling strategies are: 'LHS','Random','Chebyshev','Circle','Logistic','Piecewise','Sine','Singer','Sinusoidal','Tent'.")
-
-    return Xs, lbs, ubs
-
-
 def run(pop, dim, lb, ub, MaxIter,n_obj,nAr,M, fun,RecordPath = None, args=()):
     """
     Main function for the algorithm
@@ -302,42 +278,45 @@ def run(pop, dim, lb, ub, MaxIter,n_obj,nAr,M, fun,RecordPath = None, args=()):
     ub: upper boundary -> np.array
     lb: lower boundary -> np.array
     MaxIter: num. of iterations. int
+    n_obj: number of objective functions -> int
+    nAr: archive size -> int
+    M: number of mesh grids -> int
     fun: The user defined objective function or function in pycup.test_functions. The function
          should return a fitness value and a calculation result. See pycup.test_functions for
          more information -> function variable
+    RecordPath: the path of the record file for a hot start -> str
     args: A tuple of arguments. Users can use it for obj_fun's customization. For example, the
           parameter file path and model file path can be stored in this tuple for further use.
           See the document for more details.
 
     :returns
-    GbestScore: The best fitness obtained by the algorithm.
-    GbestPositon: The sample which obtained the best fitness.
-    Curve: The optimization curve
     hs: Historical samples.
     hf: The fitness of historical samples.
     hr: The results of historical samples.
 
     Reference:
+    single objective version ->
     Mirjalili, S. (2015). Moth-flame optimization algorithm: A novel nature-inspired heuristic paradigm.
     Knowledge-Based Systems, 89, 228–249. https://doi.org/10.1016/j.knosys.2015.07.006
 
-    Notes:
-    The pseudo code in the original paper seems to has a little when updating the flame. Here we concatenate the moth
-    and flame and sort them to update the flame. By doing this, the global optimal position can always be stored in the
-    flame population.
+    bullets for multi objective modification ->
+    1. non-domination sort (used in almost all kinds of MO-algorithms)
+    2. corwding distance sort (used also in NSGA2). 1. and 2. were the criteria for sorting the flame population
+    3. archive (used also in MOPSO)
+    4. flame-based EOBL improvement (modified and proposed by Qianyang Wang in MFO, and converted to a non-domination version
+       by Qianyang Wang in MOMFO)
+
 
     Usage:
     import pycup as cp
+    from pycup.test_functions import ZDT4
 
-    def uni_fun1(X):
-        # X for example np.array([1,2,3,...,30])
-        fitness = np.sum(np.power(X,2)) + 1 # example: 1.2
-        result = fitness.reshape(1,-1) # example ([1.2,])
-        return fitness,result
-
-    lb = -100 * np.ones(30)
-    ub = 100 * np.ones(30)
-    cp.MFO.run(pop = 1000, dim = 30, lb = lb, ub = ub, MaxIter = 30, fun = uni_fun1)
+    dim = 10
+    lb = np.zeros(10)
+    ub = np.ones(10)
+    n_obj=2
+    cp.MOMFO.EliteOppoSwitch = True
+    cp.MOMFO.run(90,10,lb,ub,500,2,100,20,ZDT4)
     """
     print("Current Algorithm: MFO")
     print("Elite Opposition:{}".format(EliteOppoSwitch))
@@ -496,42 +475,46 @@ def runMP(pop, dim, lb, ub, MaxIter,n_obj,nAr,M, fun,n_jobs,RecordPath = None, a
     ub: upper boundary -> np.array
     lb: lower boundary -> np.array
     MaxIter: num. of iterations. int
+    n_obj: number of objective functions -> int
+    nAr: archive size -> int
+    M: number of mesh grids -> int
     fun: The user defined objective function or function in pycup.test_functions. The function
          should return a fitness value and a calculation result. See pycup.test_functions for
          more information -> function variable
+    n_jobs: number of threads for multi-processing optimization -> int
+    RecordPath: the path of the record file for a hot start -> str
     args: A tuple of arguments. Users can use it for obj_fun's customization. For example, the
           parameter file path and model file path can be stored in this tuple for further use.
           See the document for more details.
 
     :returns
-    GbestScore: The best fitness obtained by the algorithm.
-    GbestPositon: The sample which obtained the best fitness.
-    Curve: The optimization curve
     hs: Historical samples.
     hf: The fitness of historical samples.
     hr: The results of historical samples.
 
     Reference:
+    single objective version ->
     Mirjalili, S. (2015). Moth-flame optimization algorithm: A novel nature-inspired heuristic paradigm.
     Knowledge-Based Systems, 89, 228–249. https://doi.org/10.1016/j.knosys.2015.07.006
 
-    Notes:
-    The pseudo code in the original paper seems to has a little when updating the flame. Here we concatenate the moth
-    and flame and sort them to update the flame. By doing this, the global optimal position can always be stored in the
-    flame population.
+    bullets for multi objective modification ->
+    1. non-domination sort (used in almost all kinds of MO-algorithms)
+    2. corwding distance sort (used also in NSGA2). 1. and 2. were the criteria for sorting the flame population
+    3. archive (used also in MOPSO)
+    4. flame-based EOBL improvement (modified and proposed by Qianyang Wang in MFO, and converted to a non-domination version
+       by Qianyang Wang in MOMFO)
+
 
     Usage:
     import pycup as cp
+    from pycup.test_functions import ZDT4
 
-    def uni_fun1(X):
-        # X for example np.array([1,2,3,...,30])
-        fitness = np.sum(np.power(X,2)) + 1 # example: 1.2
-        result = fitness.reshape(1,-1) # example ([1.2,])
-        return fitness,result
-
-    lb = -100 * np.ones(30)
-    ub = 100 * np.ones(30)
-    cp.MFO.run(pop = 1000, dim = 30, lb = lb, ub = ub, MaxIter = 30, fun = uni_fun1)
+    dim = 10
+    lb = np.zeros(10)
+    ub = np.ones(10)
+    n_obj=2
+    cp.MOMFO.EliteOppoSwitch = True
+    cp.MOMFO.runMP(90,10,lb,ub,50,2,100,20,ZDT4,5)
     """
     print("Current Algorithm: MFO")
     print("Elite Opposition:{}".format(EliteOppoSwitch))
