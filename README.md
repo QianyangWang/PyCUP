@@ -6,7 +6,8 @@ This is an open-source package designed for (environmental) model calibration an
 
 ## v 0.1.7 Update
 
-A new superior algorithm MOMFO (multi-objective moth-flame optimizer)  based on archive and crowding distance non-domination sort, and its elite-opposition improved version (EO-MOMFO) have been designed and provided in the new version. The elite opposition mechanism was modified based on the concept of non-domination and was embedded for updating the flame population of MOMFO. The implemented MOMFO has a similar principle as the current literature, although with some differences in details, while the elite-opposition version is original in this package.
+1.  A new superior algorithm MOMFO (multi-objective moth-flame optimizer)  based on archive and crowding distance non-domination sort, and its elite-opposition improved version (EO-MOMFO) have been designed and provided in the new version. The elite opposition mechanism was modified based on the concept of non-domination and was embedded for updating the flame population of MOMFO. The implemented MOMFO has a similar principle as the current literature, although with some differences in details, while the elite-opposition version is original in this package.
+1.  A "Mode" variable for MFO and MOMFO for switching the flame updating mechanism has been provided. A "Mode" value of 0 is for Mirjalili's original version, while a "Mode" value of 1 (default) is my modification. Details about the differences will be given in the upcoming algorithm introduction documentations.
 
 ## What does it have
 

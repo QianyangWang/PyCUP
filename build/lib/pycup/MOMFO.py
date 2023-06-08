@@ -14,6 +14,7 @@ Sampling = "LHS"
 EliteOppoSwitch = True
 OppoFactor = 0.1
 BorderCheckMethod = "rebound"
+Mode = 0
 
 
 def nonDominationSort(X, fitness):
@@ -334,6 +335,9 @@ def run(pop, dim, lb, ub, MaxIter,n_obj,nAr,M, fun,RecordPath = None, args=()):
         hr = []
         X, lb, ub = initial(pop, dim, ub, lb)
         fitness,res = CalculateFitness(X, fun,n_obj, args)
+        # X t-1
+        Xp = copy.copy(X)
+        fitnessP = copy.copy(fitness)
         hr.append(res)
         hs.append(copy.copy(X))
         hf.append(copy.copy(fitness))
@@ -349,7 +353,7 @@ def run(pop, dim, lb, ub, MaxIter,n_obj,nAr,M, fun,RecordPath = None, args=()):
         Xs, fitnessS = rank_distance_sort(X, fitness, ranks, distances)
         record = save.MOswarmRecord(pop=pop,dim=dim,lb=lb,ub=ub,hf=hf,hs=hs,hr=hr,
                          X=X,fitness=fitness,iteration=0,
-                         Xs=Xs,fitnessS=fitnessS,n_obj=n_obj)
+                         Xs=Xs,fitnessS=fitnessS,Xp=Xp,fitnessP=fitnessP,archive=archive,arFits=arFits,arRes=arRes,n_obj=n_obj)
         record.save()
 
     else:
@@ -362,8 +366,10 @@ def run(pop, dim, lb, ub, MaxIter,n_obj,nAr,M, fun,RecordPath = None, args=()):
         arRes = record.arRes
         X = record.X
         Xs = record.Xs
+        Xp = record.Xp
         fitnessS = record.fitnessS
         fitness = record.fitness
+        fitnessP = record.fitnessP
         iter = record.iteration
         a_lb = record.lb
         a_ub = record.ub
@@ -398,8 +404,16 @@ def run(pop, dim, lb, ub, MaxIter,n_obj,nAr,M, fun,RecordPath = None, args=()):
         archive, arFits,arRes = updateArchive(X, fitness,res, archive, arFits,arRes)
         archive, arFits,arRes = checkArchive(archive, arFits,arRes, nAr, M)
         # merge the flame and moth
-        fitnessM = np.concatenate([fitnessS,fitness],axis=0)
-        Xm = np.concatenate([Xs,X],axis=0)
+        if Mode == 0:
+            # Mirjalili's original version
+            fitnessM = np.concatenate([fitnessP, fitness], axis=0)
+            Xm = np.concatenate([Xp, X], axis=0)
+        elif Mode == 1:
+            # My version: Remain the historical local optimums, v1 and v2 will be the same in iteration 0 and 1
+            fitnessM = np.concatenate([fitnessS,fitness],axis=0)
+            Xm = np.concatenate([Xs,X],axis=0)
+        else:
+            raise NotImplementedError("The mode should be 0 or 1.")
         ranks = nonDominationSort(Xm, fitnessM)
         distances = crowdingDistanceSort(Xm, fitnessM, ranks)
         #Xm, fitnessM = select1(Xm.shape[0], Xm, fitnessM, ranks, distances)
@@ -408,6 +422,8 @@ def run(pop, dim, lb, ub, MaxIter,n_obj,nAr,M, fun,RecordPath = None, args=()):
         Xs = Xm[0:Flame_no,:]
         fitnessS = fitnessM[0:Flame_no]
 
+        Xp = copy.copy(X)
+        fitnessP = copy.copy(fitness)
         X2file = copy.copy(X)
         fitness2file = copy.copy(fitness)
         res2file = copy.copy(res)
@@ -431,7 +447,6 @@ def run(pop, dim, lb, ub, MaxIter,n_obj,nAr,M, fun,RecordPath = None, args=()):
 
                 ranks = nonDominationSort(Xs, fitnessS)
                 distances = crowdingDistanceSort(Xs, fitnessS, ranks)
-                #Xs, fitnessS = select1(Xs.shape[0], Xs, fitnessS, ranks, distances)
                 Xs, fitnessS = rank_distance_sort(Xs, fitnessS, ranks, distances)
                 X2file = np.concatenate([X2file, XOppo], axis=0)
                 fitness2file = np.concatenate([fitness2file, fitOppo], axis=0)
@@ -449,7 +464,7 @@ def run(pop, dim, lb, ub, MaxIter,n_obj,nAr,M, fun,RecordPath = None, args=()):
 
         record = save.MOswarmRecord(pop=pop,dim=dim,lb=lb,ub=ub,hf=hf,hs=hs,hr=hr,
                          X=X,fitness=fitness,iteration=t+1,
-                         Xs=Xs,fitnessS=fitnessS,archive=archive,arFits=arFits,arRes=arRes,n_obj=n_obj)
+                         Xs=Xs,fitnessS=fitnessS,Xp=Xp,fitnessP=fitnessP,archive=archive,arFits=arFits,arRes=arRes,n_obj=n_obj)
         record.save()
 
     paretoPops, paretoFits, paretoRes = getNonDominationPops(archive, arFits, arRes)
@@ -532,6 +547,9 @@ def runMP(pop, dim, lb, ub, MaxIter,n_obj,nAr,M, fun,n_jobs,RecordPath = None, a
         hr = []
         X, lb, ub = initial(pop, dim, ub, lb)
         fitness,res = CalculateFitnessMP(X, fun,n_obj,n_jobs, args)
+        # X t-1
+        Xp = copy.copy(X)
+        fitnessP = copy.copy(fitness)
         hr.append(res)
         hs.append(copy.copy(X))
         hf.append(copy.copy(fitness))
@@ -547,7 +565,7 @@ def runMP(pop, dim, lb, ub, MaxIter,n_obj,nAr,M, fun,n_jobs,RecordPath = None, a
         Xs, fitnessS = rank_distance_sort(X, fitness, ranks, distances)
         record = save.MOswarmRecord(pop=pop,dim=dim,lb=lb,ub=ub,hf=hf,hs=hs,hr=hr,
                          X=X,fitness=fitness,iteration=0,
-                         Xs=Xs,fitnessS=fitnessS,n_obj=n_obj)
+                         Xs=Xs,fitnessS=fitnessS,Xp=Xp,fitnessP=fitnessP,archive=archive,arFits=arFits,arRes=arRes,n_obj=n_obj)
         record.save()
 
     else:
@@ -560,8 +578,10 @@ def runMP(pop, dim, lb, ub, MaxIter,n_obj,nAr,M, fun,n_jobs,RecordPath = None, a
         arRes = record.arRes
         X = record.X
         Xs = record.Xs
+        Xp = record.Xp
         fitnessS = record.fitnessS
         fitness = record.fitness
+        fitnessP = record.fitnessP
         iter = record.iteration
         a_lb = record.lb
         a_ub = record.ub
@@ -595,9 +615,16 @@ def runMP(pop, dim, lb, ub, MaxIter,n_obj,nAr,M, fun,n_jobs,RecordPath = None, a
         fitness, res = CalculateFitnessMP(X, fun,n_obj,n_jobs, args)
         archive, arFits,arRes = updateArchive(X, fitness,res, archive, arFits,arRes)
         archive, arFits,arRes = checkArchive(archive, arFits,arRes, nAr, M)
-        # merge the flame and moth
-        fitnessM = np.concatenate([fitnessS,fitness],axis=0)
-        Xm = np.concatenate([Xs,X],axis=0)
+        if Mode == 0:
+            # Mirjalili's original version
+            fitnessM = np.concatenate([fitnessP, fitness], axis=0)
+            Xm = np.concatenate([Xp, X], axis=0)
+        elif Mode == 1:
+            # My version: Remain the historical local optimums, v1 and v2 will be the same in iteration 0 and 1
+            fitnessM = np.concatenate([fitnessS,fitness],axis=0)
+            Xm = np.concatenate([Xs,X],axis=0)
+        else:
+            raise NotImplementedError("The mode should be 0 or 1.")
         ranks = nonDominationSort(Xm, fitnessM)
         distances = crowdingDistanceSort(Xm, fitnessM, ranks)
         Xm, fitnessM = rank_distance_sort(Xm, fitnessM, ranks, distances)
@@ -605,6 +632,8 @@ def runMP(pop, dim, lb, ub, MaxIter,n_obj,nAr,M, fun,n_jobs,RecordPath = None, a
         Xs = Xm[0:Flame_no,:]
         fitnessS = fitnessM[0:Flame_no]
 
+        Xp = copy.copy(X)
+        fitnessP = copy.copy(fitness)
         X2file = copy.copy(X)
         fitness2file = copy.copy(fitness)
         res2file = copy.copy(res)
@@ -644,7 +673,7 @@ def runMP(pop, dim, lb, ub, MaxIter,n_obj,nAr,M, fun,n_jobs,RecordPath = None, a
 
         record = save.MOswarmRecord(pop=pop,dim=dim,lb=lb,ub=ub,hf=hf,hs=hs,hr=hr,
                          X=X,fitness=fitness,iteration=t+1,
-                         Xs=Xs,fitnessS=fitnessS,archive=archive,arFits=arFits,arRes=arRes,n_obj=n_obj)
+                         Xs=Xs,fitnessS=fitnessS,Xp=Xp,fitnessP=fitnessP,archive=archive,arFits=arFits,arRes=arRes,n_obj=n_obj)
         record.save()
 
     paretoPops, paretoFits, paretoRes = getNonDominationPops(archive, arFits, arRes)

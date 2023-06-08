@@ -424,7 +424,7 @@ class SwarmRecord(RecordSaver):
                  Alpha_pos=None, Alpha_score=None, Beta_pos=None, Beta_score=None, Delta_pos=None, Delta_score=None,
                  Xs=None, fitnessS=None, resS=None,
                  MS=None, CS=None, DS=None,X_new=None,
-                 Pos=None
+                 Pos=None,Xp=None,fitnessP=None
                  ):
         self.pop = pop
         self.dim = dim
@@ -460,6 +460,8 @@ class SwarmRecord(RecordSaver):
         self.DS = DS
         self.X_new = X_new
         self.Pos = Pos
+        self.Xp=Xp
+        self.fitnessP=fitnessP
 
 
 class GLUERecord(RecordSaver):
@@ -481,7 +483,7 @@ class MOswarmRecord(RecordSaver):
     def __init__(self,pop,dim,lb,ub,hf,hs,hr,X,iteration,n_obj,V=None,
                  archive=None,arFits=None,arRes=None,Pbest=None,fitnessPbest=None,
                  fitnessGbest = None,GbestPositon=None,fitness=None,res=None,Xs=None,
-                 fitnessS=None,resS=None):
+                 fitnessS=None,resS=None,Xp=None,fitnessP=None):
         self.pop = pop
         self.dim = dim
         self.lb = lb
@@ -505,3 +507,5 @@ class MOswarmRecord(RecordSaver):
         self.Xs=Xs
         self.fitnessS=fitnessS
         self.resS=resS
+        self.Xp = Xp
+        self.fitnessP = fitnessP

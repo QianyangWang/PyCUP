@@ -14,6 +14,7 @@ Sampling = "LHS"
 EliteOppoSwitch = True
 OppoFactor = 0.1
 BorderCheckMethod = "rebound"
+Mode = 1 # The switch for the flame generation mechanism, 0: Mirjalili's original version, 1: My version
 
 
 def initial(pop, dim, ub, lb):
@@ -128,19 +129,19 @@ def run(pop, dim, lb, ub, MaxIter,  fun,RecordPath = None, args=()):
         hs.append(copy.copy(X))
         hf.append(copy.copy(fitness))
         Progress_Bar.update(len(hf))
-        #X_previous = copy.copy(X)
-        #fitness_previous = copy.copy(fitness)
-        #res_previous = copy.copy(res)
         fitnessS, sortIndex = SortFitness(fitness)
         # in the first iteration, the flame is the sorted population
         Xs = SortPosition(X, sortIndex)
+        # X t-1
+        Xp = copy.copy(X)
+        fitnessP = copy.copy(fitness)
         GbestScore = copy.copy(fitnessS[0])
         GbestPosition = np.zeros([1, dim])
         GbestPosition[0, :] = copy.copy(Xs[0, :])
         Curve = np.zeros([MaxIter, 1])
         record = save.SwarmRecord(pop=pop,dim=dim,lb=lb,ub=ub,hf=hf,hs=hs,hr=hr,
                          GbestPosition=GbestPosition,GbestScore=GbestScore,Curve=Curve,X=X,fitness=fitness,iteration=0,
-                         Xs=Xs,fitnessS=fitnessS)
+                         Xs=Xs,fitnessS=fitnessS,Xp=Xp,fitnessP=fitnessP)
         record.save()
     else:
         record = save.SwarmRecord.load(RecordPath)
@@ -149,8 +150,10 @@ def run(pop, dim, lb, ub, MaxIter,  fun,RecordPath = None, args=()):
         hr = record.hr
         X = record.X
         Xs = record.Xs
+        Xp = record.Xp
         fitnessS = record.fitnessS
         fitness = record.fitness
+        fitnessP = record.fitnessP
         GbestScore = record.GbestScore
         GbestPosition = record.GbestPosition
         Curve = record.Curve
@@ -186,16 +189,26 @@ def run(pop, dim, lb, ub, MaxIter,  fun,RecordPath = None, args=()):
         X = checker.BorderCheck(X, ub, lb, pop, dim)
         fitness, res = CalculateFitness(X, fun,1, args)
 
-        # merge the flame and moth
-        fitnessM = np.concatenate([fitnessS,fitness],axis=0)
-        Xm = np.concatenate([Xs,X],axis=0)
+        # merge the moth t-1 (mode = 0)/ flame (mode = 1) and moth
+        if Mode == 0:
+            # Mirjalili's original version
+            Xm = np.concatenate([Xp, X], axis=0)
+            fitnessM = np.concatenate([fitnessP, fitness], axis=0)
+        elif Mode == 1:
+            # My version: Remain the historical local/global optimums, v1 and v2 will be the same in iteration 0 and 1
+            # This modification can guide the moths always using the historical optima, instead of loosing them as in mode 1
+            Xm = np.concatenate([Xs,X],axis=0)
+            fitnessM = np.concatenate([fitnessS, fitness], axis=0)
+        else:
+            raise NotImplementedError("The mode should be 0 or 1.")
         fitnessM, sortIndexM = SortFitness(fitnessM)
         Xm = SortPosition(Xm, sortIndexM)
         # update the Xs (flame population)
         Xs = Xm[0:Flame_no,:]
         fitnessS = fitnessM[0:Flame_no]
 
-
+        Xp = copy.copy(X)
+        fitnessP = copy.copy(fitness)
         X2file = copy.copy(X)
         fitness2file = copy.copy(fitness)
         res2file = copy.copy(res)
@@ -233,7 +246,7 @@ def run(pop, dim, lb, ub, MaxIter,  fun,RecordPath = None, args=()):
 
         record = save.SwarmRecord(pop=pop,dim=dim,lb=lb,ub=ub,hf=hf,hs=hs,hr=hr,
                          GbestPosition=GbestPosition,GbestScore=GbestScore,Curve=Curve,X=X,fitness=fitness,iteration=t+1,
-                         Xs=Xs,fitnessS=fitnessS)
+                         Xs=Xs,fitnessS=fitnessS,Xp=Xp,fitnessP=fitnessP)
         record.save()
 
     print("")  # for progress bar
@@ -308,13 +321,16 @@ def runMP(pop, dim, lb, ub, MaxIter, fun, n_jobs,RecordPath = None, args=()):
         Progress_Bar.update(len(hf))
         fitnessS, sortIndex = SortFitness(fitness)
         Xs = SortPosition(X, sortIndex)
+        # X t-1
+        Xp = copy.copy(X)
+        fitnessP = copy.copy(fitness)
         GbestScore = copy.copy(fitnessS[0])
         GbestPosition = np.zeros([1, dim])
         GbestPosition[0, :] = copy.copy(Xs[0, :])
         Curve = np.zeros([MaxIter, 1])
         record = save.SwarmRecord(pop=pop,dim=dim,lb=lb,ub=ub,hf=hf,hs=hs,hr=hr,
                          GbestPosition=GbestPosition,GbestScore=GbestScore,Curve=Curve,X=X,fitness=fitness,iteration=0,
-                         Xs=Xs,fitnessS=fitnessS)
+                         Xs=Xs,fitnessS=fitnessS,Xp=Xp,fitnessP=fitnessP)
         record.save()
     else:
         record = save.SwarmRecord.load(RecordPath)
@@ -323,7 +339,9 @@ def runMP(pop, dim, lb, ub, MaxIter, fun, n_jobs,RecordPath = None, args=()):
         hr = record.hr
         X = record.X
         Xs = record.Xs
+        Xp = record.Xp
         fitnessS = record.fitnessS
+        fitnessP = record.fitnessP
         fitness = record.fitness
         GbestScore = record.GbestScore
         GbestPosition = record.GbestPosition
@@ -358,14 +376,25 @@ def runMP(pop, dim, lb, ub, MaxIter, fun, n_jobs,RecordPath = None, args=()):
 
         X = checker.BorderCheck(X, ub, lb, pop, dim)
         fitness, res = CalculateFitnessMP(X, fun,1,n_jobs, args)
-        fitnessM = np.concatenate([fitnessS, fitness], axis=0)
-        Xm = np.concatenate([Xs, X], axis=0)
+        # merge the moth t-1 (mode = 0)/ flame (mode = 1) and moth
+        if Mode == 0:
+            # Mirjalili's original version
+            Xm = np.concatenate([Xp, X], axis=0)
+            fitnessM = np.concatenate([fitnessP, fitness], axis=0)
+        elif Mode == 1:
+            # My version: Remain the historical local optimums
+            Xm = np.concatenate([Xs,X],axis=0)
+            fitnessM = np.concatenate([fitnessS, fitness], axis=0)
+        else:
+            raise NotImplementedError("The mode should be 0 or 1.")
         fitnessM, sortIndexM = SortFitness(fitnessM)
         Xm = SortPosition(Xm, sortIndexM)
         # update the Xs
         Xs = Xm[0:Flame_no, :]
         fitnessS = fitnessM[0:Flame_no]
 
+        Xp = copy.copy(X)
+        fitnessP = copy.copy(fitness)
         X2file = copy.copy(X)
         fitness2file = copy.copy(fitness)
         res2file = copy.copy(res)
@@ -403,7 +432,7 @@ def runMP(pop, dim, lb, ub, MaxIter, fun, n_jobs,RecordPath = None, args=()):
 
         record = save.SwarmRecord(pop=pop,dim=dim,lb=lb,ub=ub,hf=hf,hs=hs,hr=hr,
                          GbestPosition=GbestPosition,GbestScore=GbestScore,Curve=Curve,X=X,fitness=fitness,iteration=t+1,
-                         Xs=Xs,fitnessS=fitnessS)
+                         Xs=Xs,fitnessS=fitnessS,Xp=Xp,fitnessP=fitnessP)
         record.save()
 
     print("")  # for progress bar
@@ -463,6 +492,9 @@ def run_MV(pop, dims, lbs, ubs, MaxIter, fun,RecordPath = None, args=()):
         fitness,res = CalculateFitness_MV(X, fun, args)
         Xs = copy.copy(X)
         fitnessS = copy.copy(fitness)
+        # X t-1
+        Xp = copy.copy(X)
+        fitnessP = copy.copy(fitness)
         for i in range(num_var):
             hrs[i].append(res[i])
             hss[i].append(copy.copy(X[i]))
@@ -480,7 +512,7 @@ def run_MV(pop, dims, lbs, ubs, MaxIter, fun,RecordPath = None, args=()):
         Curve = [np.zeros([MaxIter, 1]) for i in range(num_var)]
         record = save.SwarmRecord(pop=pop,dim=dims,lb=lbs,ub=ubs,hf=hfs,hs=hss,hr=hrs,
                          GbestPosition=GbestPosition,GbestScore=GbestScore,Curve=Curve,X=X,fitness=fitness,iteration=0,
-                         Xs=Xs,fitnessS=fitnessS)
+                         Xs=Xs,fitnessS=fitnessS,Xp=Xp,fitnessP=fitnessP)
         record.save()
     else:
         record = save.SwarmRecord.load(RecordPath)
@@ -489,7 +521,9 @@ def run_MV(pop, dims, lbs, ubs, MaxIter, fun,RecordPath = None, args=()):
         hrs = record.hr
         X = record.X
         Xs = record.Xs
+        Xp = record.Xp
         fitnessS = record.fitnessS
+        fitnessP = record.fitnessP
         fitness = record.fitness
         GbestScore = record.GbestScore
         GbestPosition = record.GbestPosition
@@ -528,14 +562,22 @@ def run_MV(pop, dims, lbs, ubs, MaxIter, fun,RecordPath = None, args=()):
         fitness, res = CalculateFitness_MV(X, fun, args)
 
         for n in range(num_var):
-            fitnessM = np.concatenate([fitnessS[n],fitness[n]],axis=0)
-            Xm = np.concatenate([Xs[n],X[n]],axis=0)
+            if Mode == 0:
+                fitnessM = np.concatenate([fitnessP[n],fitness[n]],axis=0)
+                Xm = np.concatenate([Xp[n],X[n]],axis=0)
+            elif Mode == 1:
+                fitnessM = np.concatenate([fitnessS[n],fitness[n]],axis=0)
+                Xm = np.concatenate([Xs[n],X[n]],axis=0)
+            else:
+                raise NotImplementedError("The mode should be 0 or 1.")
             fitnessM, sortIndexM = SortFitness(fitnessM)
             Xm = SortPosition(Xm, sortIndexM)
             # update the Xs
             Xs[n] = Xm[0:Flame_no,:]
             fitnessS[n] = fitnessM[0:Flame_no]
 
+        Xp = copy.copy(X)
+        fitnessP = copy.copy(fitness)
         X2file = copy.copy(X)
         fitness2file = copy.copy(fitness)
         res2file = copy.copy(res)
@@ -578,7 +620,7 @@ def run_MV(pop, dims, lbs, ubs, MaxIter, fun,RecordPath = None, args=()):
 
         record = save.SwarmRecord(pop=pop,dim=dims,lb=lbs,ub=ubs,hf=hfs,hs=hss,hr=hrs,
                          GbestPosition=GbestPosition,GbestScore=GbestScore,Curve=Curve,X=X,fitness=fitness,iteration=t+1,
-                         Xs=Xs,fitnessS=fitnessS)
+                         Xs=Xs,fitnessS=fitnessS,Xp=Xp,fitnessP=fitnessP)
         record.save()
 
     print("")  # for progress bar
@@ -645,6 +687,9 @@ def runMP_MV(pop, dims, lbs, ubs, MaxIter, fun,n_jobs,RecordPath = None, args=()
         fitness,res = CalculateFitnessMP_MV(X, fun,n_jobs, args)
         Xs = copy.copy(X)
         fitnessS = copy.copy(fitness)
+        # X t-1
+        Xp = copy.copy(X)
+        fitnessP = copy.copy(fitness)
         for i in range(num_var):
             hrs[i].append(res[i])
             hss[i].append(copy.copy(X[i]))
@@ -662,7 +707,7 @@ def runMP_MV(pop, dims, lbs, ubs, MaxIter, fun,n_jobs,RecordPath = None, args=()
         Curve = [np.zeros([MaxIter, 1]) for i in range(num_var)]
         record = save.SwarmRecord(pop=pop,dim=dims,lb=lbs,ub=ubs,hf=hfs,hs=hss,hr=hrs,
                          GbestPosition=GbestPosition,GbestScore=GbestScore,Curve=Curve,X=X,fitness=fitness,iteration=0,
-                         Xs=Xs,fitnessS=fitnessS)
+                         Xs=Xs,fitnessS=fitnessS,Xp=Xp,fitnessP=fitnessP)
         record.save()
     else:
         record = save.SwarmRecord.load(RecordPath)
@@ -671,8 +716,10 @@ def runMP_MV(pop, dims, lbs, ubs, MaxIter, fun,n_jobs,RecordPath = None, args=()
         hrs = record.hr
         X = record.X
         Xs = record.Xs
+        Xp = record.Xp
         fitnessS = record.fitnessS
         fitness = record.fitness
+        fitnessP = record.fitnessP
         GbestScore = record.GbestScore
         GbestPosition = record.GbestPosition
         Curve = record.Curve
@@ -710,14 +757,22 @@ def runMP_MV(pop, dims, lbs, ubs, MaxIter, fun,n_jobs,RecordPath = None, args=()
         fitness, res = CalculateFitnessMP_MV(X, fun,n_jobs, args)
 
         for n in range(num_var):
-            fitnessM = np.concatenate([fitnessS[n],fitness[n]],axis=0)
-            Xm = np.concatenate([Xs[n],X[n]],axis=0)
+            if Mode == 0:
+                fitnessM = np.concatenate([fitnessP[n],fitness[n]],axis=0)
+                Xm = np.concatenate([Xp[n],X[n]],axis=0)
+            elif Mode == 1:
+                fitnessM = np.concatenate([fitnessS[n],fitness[n]],axis=0)
+                Xm = np.concatenate([Xs[n],X[n]],axis=0)
+            else:
+                raise NotImplementedError("The mode should be 0 or 1.")
             fitnessM, sortIndexM = SortFitness(fitnessM)
             Xm = SortPosition(Xm, sortIndexM)
             # update the Xs
             Xs[n] = Xm[0:Flame_no,:]
             fitnessS[n] = fitnessM[0:Flame_no]
 
+        Xp = copy.copy(X)
+        fitnessP = copy.copy(fitness)
         X2file = copy.copy(X)
         fitness2file = copy.copy(fitness)
         res2file = copy.copy(res)
@@ -760,7 +815,7 @@ def runMP_MV(pop, dims, lbs, ubs, MaxIter, fun,n_jobs,RecordPath = None, args=()
 
         record = save.SwarmRecord(pop=pop,dim=dims,lb=lbs,ub=ubs,hf=hfs,hs=hss,hr=hrs,
                          GbestPosition=GbestPosition,GbestScore=GbestScore,Curve=Curve,X=X,fitness=fitness,iteration=t+1,
-                         Xs=Xs,fitnessS=fitnessS)
+                         Xs=Xs,fitnessS=fitnessS,Xp=Xp,fitnessP=fitnessP)
         record.save()
 
     print("")  # for progress bar
