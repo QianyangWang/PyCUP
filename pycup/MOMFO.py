@@ -14,7 +14,7 @@ Sampling = "LHS"
 EliteOppoSwitch = True
 OppoFactor = 0.1
 BorderCheckMethod = "rebound"
-Mode = 0
+Mode = 1
 
 
 def nonDominationSort(X, fitness):
