@@ -14,7 +14,7 @@ This is an open-source package designed for (environmental) model calibration an
 ### (1) For model calibration/optimization
 
 1. Single-objective heuristic algorithms including PSO, GWO, MFO, SOA, SCA, SSA, TSA, and WOA.
-2. Multi-objective heuristic algorithms including MOPSO, MODE, and NSGA-II.
+2. Multi-objective heuristic algorithms including MOPSO, MOMFO, MODE, and NSGA-II.
 3. Elite opposition strategy modified heuristic algorithms -- with better optimum search abilities.
 4. Statistic based-method LHS-GLUE.
 5. Three kinds of algorithm border check mechanisms including Absorb, Random, and Rebound, designed for different problems.
