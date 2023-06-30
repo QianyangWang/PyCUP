@@ -175,6 +175,7 @@ def run(pop, dim, lb, ub, MaxIter,  fun,RecordPath = None, args=()):
             for j in range(dim):
                 if i <= Flame_no-1:
                     distance_to_flame = np.abs(Xs[i, j] - X[i, j])
+                    # The parameter b here is 1 as default, but it can still be further adjusted for a better optimization ability.
                     b = 1
                     r = (a - 1) * random.random() + 1
 
