@@ -1,7 +1,7 @@
 # PyCUP
 
 <img src="https://img.shields.io/badge/Version-0.1.7-brightgreen" /><img src="https://img.shields.io/badge/Language-Python-blue" />	
-[![PyPI download 3 month](([https://static.pepy.tech/badge/pycup](https://static.pepy.tech/badge/pycup)))]
+[![PyPI download 3 month]([[https://static.pepy.tech/badge/pycup](https://static.pepy.tech/badge/pycup)]
 [![PyPI download month](https://img.shields.io/pypi/dm/pycup.svg)](https://pypistats.org/packages/pycup)
 
 This is an open-source package designed for (environmental) model calibration and uncertainty analysis. The current version is the very first version, we welcome all comments, suggestions, and improvements.
