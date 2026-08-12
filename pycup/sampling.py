@@ -1,4 +1,4 @@
-from pyDOE import lhs
+from pydoe import lhs
 import numpy as np
 import random
 import math
